@@ -1,5 +1,6 @@
 # Java_OOP
 Repository for Java lessons
+
 Description of the bot at the level for the starting task:
 1. When calling the /start command, the bot appears and gives a message to the user about its capabilities.
 2. When calling the /help command, the bot displays this message again at any time. 
