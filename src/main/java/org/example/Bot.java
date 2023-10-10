@@ -15,7 +15,7 @@ import java.util.List;
 public class Bot extends TelegramLongPollingBot {
     final private String BOT_TOKEN = "***";
     final private String BOT_NAME = "groobee";
-    Storage storage;
+    static Storage storage;
 
     Bot() {
         storage = new Storage();
@@ -57,7 +57,7 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    public String parseMessage(String textMsg) {
+    public static String parseMessage(String textMsg) {
         String response;
 
         //Сравниваем текст пользователя с нашими командами, на основе этого формируем ответ
