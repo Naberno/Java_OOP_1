@@ -2,7 +2,7 @@ package org.example;
 
 import java.util.ArrayList;
 
-public class Storage {
+class Storage {
     private ArrayList<String> quoteList;
     Storage()
     {
