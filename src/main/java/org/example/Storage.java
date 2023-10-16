@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 class Storage {
     private ArrayList<String> quoteList;
+     /**
+     Создание хранилища для цитат
+     */
     Storage()
     {
         quoteList = new ArrayList<>();
@@ -12,6 +15,9 @@ class Storage {
         quoteList.add("Мы должны признать очевидное: понимают лишь те,кто хочет понять.\n\nБернар Вербер");
     }
 
+     /**
+     Получение рандомной цитаты из хранилища
+     */
     String getRandQuote()
     {
         //получаем случайное значение в интервале от 0 до самого большого индекса
