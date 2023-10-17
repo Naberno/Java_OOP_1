@@ -1,12 +1,17 @@
 package org.example;
 
+import java.sql.*;
 import java.util.ArrayList;
 
-class Storage {
+/**
+ * Класс, реализующий хранилище данных
+ */
+ class Storage {
     private ArrayList<String> quoteList;
+
      /**
-     Создание хранилища для цитат
-     */
+     * Хранилище для цитат
+      */
     Storage()
     {
         quoteList = new ArrayList<>();
@@ -16,8 +21,8 @@ class Storage {
     }
 
      /**
-     Получение рандомной цитаты из хранилища
-     */
+      * Метод для получения рандомной цитаты из quoteList
+      */
     String getRandQuote()
     {
         //получаем случайное значение в интервале от 0 до самого большого индекса
@@ -25,4 +30,5 @@ class Storage {
         //Из коллекции получаем цитату со случайным индексом и возвращаем ее
         return quoteList.get(randValue);
     }
-}
+
+ }
