@@ -18,8 +18,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     final private String BOT_TOKEN = System.getenv("tgbotToken");
     final private String BOT_NAME = "groobee";
 
-    Storage storage;
-    MessageHandling messageHandling;
+    private Storage storage;
+    private MessageHandling messageHandling;
     public TelegramBot() {
         storage = new Storage();
         messageHandling = new MessageHandling();
@@ -46,13 +46,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                 //Извлекаем из объекта сообщение пользователя
                 Message inMess = update.getMessage();
                 //Достаем из inMess id чата пользователя
-                String chatId = inMess.getChatId().toString();
+                Long chatId = inMess.getChatId();
                 //Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
-                String response = messageHandling.parseMessage(inMess.getText());
+                String response = messageHandling.parseMessage(inMess.getText(), chatId);
                 //Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
                 //Добавляем в наше сообщение id чата, а также наш ответ
-                outMess.setChatId(chatId);
+                outMess.setChatId(chatId.toString());
                 outMess.setText(response);
                 outMess.setReplyMarkup(createKeyboard());
                 //Отправка в чат
