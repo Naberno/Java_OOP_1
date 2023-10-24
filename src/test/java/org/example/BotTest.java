@@ -2,6 +2,11 @@ package org.example;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+/**
+ * Класс для тестирования Telegram-бота.
+ * Этот класс содержит методы для тестирования функциональности бота.
+ */
 public class BotTest {
 
     /**
@@ -89,6 +94,7 @@ public class BotTest {
         bot.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId);
         String response = bot.parseMessage("/getbyauthor Кинг", ChatId);
         Assert.assertEquals("Книги автора Кинг:\n" + "11.22.63", response);
+        bot.parseMessage("/clearread", ChatId);
     }
 
     /**
