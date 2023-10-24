@@ -153,12 +153,14 @@ import java.util.ArrayList;
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
                 if (resultSet != null) resultSet.close();
                 if (statement != null) statement.close();
                 if (connection != null) connection.close();
-            } catch (SQLException e) {
+            }
+            catch (SQLException e) {
                 e.printStackTrace();
             }
         }
