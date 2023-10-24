@@ -15,11 +15,34 @@ import java.util.List;
  */
 public class TelegramBot extends TelegramLongPollingBot {
 
+    /**
+     * Токен для Telegram-бота.
+     * Получено из переменной среды "tgbotToken".
+     */
     final private String BOT_TOKEN = System.getenv("tgbotToken");
+
+    /**
+     * Имя Telegram-бота.
+     * Эта переменная используется для хранения имени бота.
+     */
     final private String BOT_NAME = "groobee";
 
+    /**
+     * Экземпляр класса Storage.
+     * Эта переменная используется для хранения экземпляра хранилища.
+     */
     private Storage storage;
+
+    /**
+     * Экземпляр класса MessageHandling.
+     * Эта переменная используется для хранения экземпляра обработки сообщения.
+     */
     private MessageHandling messageHandling;
+    /**
+     * Конструктор класса TelegramBot, который инициализирует объекты Storage и MessageHandling.
+     * Storage используется для управления базой данных с прочитанными книгами,
+     * а MessageHandling - для обработки входящих сообщений от пользователя.
+     */
     public TelegramBot() {
         storage = new Storage();
         messageHandling = new MessageHandling();
