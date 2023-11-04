@@ -1,29 +1,45 @@
 package org.example;
-
 import java.sql.*;
 import java.util.ArrayList;
+// Интерфейс для работы с книгами
+interface BookStorage {
+    ArrayList<String> getReadBooks(long chatId);
 
-/**
- * Класс, реализующий хранилище данных
- */
- class Storage {
-    private ArrayList<String> quoteList;
+    void addReadBook(String title, String author, int year, long chatId);
 
-     /**
+    void clearReadBooks(long chatId);
+
+    ArrayList<String> getBooksByAuthor(String author, long chatId);
+
+    ArrayList<String> getBooksByYear(int year, long chatId);
+
+    void RemoveReadBook(String title, String author, int year, long chatId);
+}
+
+// Интерфейс для работы с цитатами
+interface QuoteStorage {
+    String getRandQuote();
+}
+
+// Реализация интерфейсов в классе Storage
+class Storage implements BookStorage, QuoteStorage {
+    final private ArrayList<String> quoteList;
+
+    /**
      * Хранилище для цитат
-      */
-    Storage()
+     */
+    public Storage()
     {
         quoteList = new ArrayList<>();
-        quoteList.add("Начинать всегда стоит с того, что сеет сомнения. \n\nБорис Стругацкий.");
-        quoteList.add("80% успеха - это появиться в нужном месте в нужное время.\n\nВуди Аллен");
-        quoteList.add("Мы должны признать очевидное: понимают лишь те,кто хочет понять.\n\nБернар Вербер");
+        quoteList.add("Цитата: Начинать всегда стоит с того, что сеет сомнения. \n\nБорис Стругацкий.");
+        quoteList.add("Цитата: 80% успеха - это появиться в нужном месте в нужное время.\n\nВуди Аллен");
+        quoteList.add("Цитата: Мы должны признать очевидное: понимают лишь те,кто хочет понять.\n\nБернар Вербер");
     }
 
-     /**
-      * Метод для получения рандомной цитаты из quoteList
-      */
-    String getRandQuote()
+    /**
+     * Метод для получения произвольной цитаты из quoteList
+     */
+    public String getRandQuote()
     {
         //получаем случайное значение в интервале от 0 до самого большого индекса
         int randValue = (int)(Math.random() * quoteList.size());
@@ -65,7 +81,7 @@ import java.util.ArrayList;
     }
 
     /**
-     * Метод для добавления книги в список прочитанных книг по формату: название, автор, год
+     * Метод для добавления книги в список прочитанных книг по формату: название /n автор /n год
      */
     public void addReadBook(String title, String author, int year, long chatId) {
         Connection connection = null;
@@ -98,7 +114,7 @@ import java.util.ArrayList;
     }
 
     /**
-     * Метод для понлой очистки списка прочитанных книг
+     * Метод для полной очистки списка прочитанных книг
      */
     public void clearReadBooks(long chatId) {
         Connection connection = null;
@@ -199,6 +215,39 @@ import java.util.ArrayList;
             }
         }
         return books;
+    }
+
+    /**
+     * Метод для удаления книги из списка прочитанных книг по формату: название /n автор /n год
+     */
+    public void RemoveReadBook(String title, String author, int year, long chatId) {
+        Connection connection = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+
+            // Создаем запрос на удаление книги из базы данных с указанием названия, автора, года прочтения и chatId
+            String sql = "DELETE FROM read_books WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, title);
+            statement.setString(2, author);
+            statement.setInt(3, year);
+            statement.setLong(4, chatId);
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        }
     }
 
 }
