@@ -1,5 +1,4 @@
 package org.example;
-
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -11,18 +10,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Интерфейс для Телеграмм-бота.
+ */
+interface TelegramBotInterface {
+
+    /**
+     * Получение и отправка сообщения в чат пользователю.
+     *
+     * @param update Объект Update с информацией о входящем сообщении.
+     */
+    void onUpdateReceived(Update update);
+
+    /**
+     * Создание клавиатуры в боте.
+     *
+     * @return Объект ReplyKeyboardMarkup с настроенной клавиатурой.
+     */
+    ReplyKeyboardMarkup createKeyboard();
+}
+
+/**
  * Класс для реализации Телеграмм-бота
  */
-public class TelegramBot extends TelegramLongPollingBot {
+public class TelegramBot extends TelegramLongPollingBot implements TelegramBotInterface {
 
     final private String BOT_TOKEN = System.getenv("tgbotToken");
+
     final private String BOT_NAME = "groobee";
 
     private Storage storage;
+
+    private PuzzleGame puzzleGame;
+
     private MessageHandling messageHandling;
+
+    /**
+     * Конструктор класса TelegramBot, который инициализирует объекты Storage и MessageHandling.
+     * Storage используется для управления базой данных с прочитанными книгами,
+     * а MessageHandling - для обработки входящих сообщений от пользователя.
+     */
     public TelegramBot() {
         storage = new Storage();
         messageHandling = new MessageHandling();
+        puzzleGame = new PuzzleGame();
     }
 
     @Override
@@ -34,7 +64,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return BOT_TOKEN;
     }
-
 
     /**
      * Получение и Отправка сообщения в чат пользователю
@@ -83,4 +112,5 @@ public class TelegramBot extends TelegramLongPollingBot {
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;
     }
+
 }
