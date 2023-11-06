@@ -2,16 +2,29 @@ package org.example;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Mock;
+
+import java.util.ArrayList;
+
+import static org.mockito.Mockito.*;
 
 public class BotTest {
     private long ChatId;
     private  MessageHandling bot ;
 
+    @Mock
+    private Storage storage;
+
+    @InjectMocks
+    private MessageHandling messageHandling;
+
     @Before
     public void setUp() {
         ChatId = 12345L;
         bot = new MessageHandling();
+        MockitoAnnotations.initMocks(this);
     }
 
     /**
@@ -56,90 +69,239 @@ public class BotTest {
         Assert.assertEquals("Привет", response);
     }
 
+
     /**
      * Проверка команды /clearread для полной очистки списка прочитанных книг
      */
     @Test
-    public void ClearReadCommandTest() {
-        MessageHandling botMock = Mockito.mock(MessageHandling.class);
-        Mockito.when(botMock.parseMessage("/clearread", ChatId)).thenReturn("Список прочитанных книг очищен!");
-
-        String response = botMock.parseMessage("/clearread", ChatId);
+    public void testClearReadBooksCommand() {
+        String response = messageHandling.parseMessage("/clearread", ChatId);
+        verify(storage, times(1)).clearReadBooks(ChatId);
         Assert.assertEquals("Список прочитанных книг очищен!", response);
     }
 
 
     /**
-     * Проверка команд /addbook для добавления книги в список прочитанных по формату: название /n автор /n год
-     * и /getread для вывода полного списка прочитанных книг
+     * Проверка добавления книги в базу данных при корректном вводе
      */
     @Test
-    public void GetReadCommandTest() {
-        MessageHandling botMock = Mockito.mock(MessageHandling.class);
-        Mockito.when(botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId))
-                .thenReturn("Книга '11.22.63' от автора Кинг (год: 2020) успешно добавлена в список прочитанных!");
-        Mockito.when(botMock.parseMessage("/getread", ChatId)).thenReturn("Прочитанные книги:\n" + "11.22.63");
+    public void testAddBookCommandWithValidInput() {
+        String textMsg = "/addbook\nSample Book\nJohn Doe\n2023";
+        when(storage.bookExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(false);
+        String response = messageHandling.parseMessage(textMsg, ChatId);
+        verify(storage, times(1)).addReadBook("Sample Book", "John Doe", 2023, ChatId);
+        Assert.assertEquals("Книга 'Sample Book' от автора John Doe (год: 2023) успешно добавлена в список прочитанных!", response);
+    }
 
-        String response = botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId);
-        Assert.assertEquals("Книга '11.22.63' от автора Кинг (год: 2020) успешно добавлена в список прочитанных!", response);
-
-        response = botMock.parseMessage("/getread", ChatId);
-        Assert.assertEquals("Прочитанные книги:\n" + "11.22.63", response);
+    /**
+     * Проверка, что книга не добавляется, если она уже существует в базе данных
+     */
+    @Test
+    public void testAddBookCommandWithExistingBook() {
+        String textMsg = "/addbook\nSample Book\nJohn Doe\n2023";
+        when(storage.bookExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(true);
+        messageHandling.parseMessage(textMsg, ChatId);
+        String response = messageHandling.parseMessage(textMsg, ChatId);
+        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Книга с указанным названием, автором и годом прочтения уже существует в базе данных.", response);
     }
 
 
     /**
-     * Проверка команды /getbyauthor для получения списка прочитанных книг указанного автора
+     * Проверка случая, когда год вводится в неверном формате
      */
     @Test
-    public void GetByAuthorCommandTest() {
-        MessageHandling botMock = Mockito.mock(MessageHandling.class);
-        Mockito.when(botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId)).thenReturn("");
-        Mockito.when(botMock.parseMessage("/getbyauthor Кинг", ChatId)).thenReturn("Книги автора Кинг:\n" + "11.22.63");
-
-        String response = botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId);
-        Assert.assertEquals("", response); // Если метод добавления книги ничего не возвращает
-
-        response = botMock.parseMessage("/getbyauthor Кинг", ChatId);
-        Assert.assertEquals("Книги автора Кинг:\n" + "11.22.63", response);
+    public void testAddBookCommandWithInvalidYear() {
+        String textMsg = "/addbook\nSample Book\nJohn Doe\nInvalidYear";
+        String response = messageHandling.parseMessage(textMsg, ChatId);
+        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Некорректный формат года прочтения.", response);
     }
 
 
     /**
-     * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году
+     * Проверка случая, когда ввод неполный
      */
     @Test
-    public void GetByYearCommandTest() {
-        MessageHandling botMock = Mockito.mock(MessageHandling.class);
-        Mockito.when(botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId)).thenReturn("");
-        Mockito.when(botMock.parseMessage("/getbyyear 2020", ChatId)).thenReturn("Книги 2020 года:\n" + "11.22.63");
-
-        String response = botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId);
-        Assert.assertEquals("", response); // Если метод добавления книги ничего не возвращает
-
-        response = botMock.parseMessage("/getbyyear 2020", ChatId);
-        Assert.assertEquals("Книги 2020 года:\n" + "11.22.63", response);
+    public void testAddBookCommandWithIncompleteInput() {
+        String textMsg = "/addbook\nSample Book\nJohn Doe";
+        String response = messageHandling.parseMessage(textMsg, ChatId);
+        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Некорректный формат ввода. Используйте /addbook Название книги\nАвтор\nГод прочтения", response);
     }
 
 
     /**
-     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг
+     * Проверка команды /getread для вывода полного списка прочитанных книг при пустом списке
      */
     @Test
-    public void RemoveBookCommandTest() {
-        MessageHandling botMock = Mockito.mock(MessageHandling.class);
-        Mockito.when(botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId)).thenReturn("");
-        Mockito.when(botMock.parseMessage("/removebook 11.22.63\n Кинг\n 2020", ChatId))
-                .thenReturn("Книга '11.22.63' от автора Кинг (год: 2020) успешно удалена из списка прочитанных!");
-
-        // Добавляем книгу
-        String response = botMock.parseMessage("/addbook 11.22.63\n Кинг\n 2020", ChatId);
-        Assert.assertEquals("", response); // Если метод добавления книги ничего не возвращает
-
-        // Удаляем книгу
-        response = botMock.parseMessage("/removebook 11.22.63\n Кинг\n 2020", ChatId);
-        Assert.assertEquals("Книга '11.22.63' от автора Кинг (год: 2020) успешно удалена из списка прочитанных!", response);
+    public void testGetReadBooksCommandWithEmptyList() {
+        ArrayList<String> emptyList = new ArrayList<>();
+        when(storage.getReadBooks(ChatId)).thenReturn(emptyList);
+        String response = messageHandling.parseMessage("/getread",ChatId);
+        verify(storage, times(1)).getReadBooks(ChatId);
+        Assert.assertEquals("Список прочитанных книг пуст.", response);
     }
+
+
+    /**
+     * Проверка команды /getread для вывода полного списка прочитанных книг при заполненном списке
+     */
+    @Test
+    public void testGetReadBooksCommandWithNonEmptyList() {
+        ArrayList<String> nonEmptyList = new ArrayList<>();
+        nonEmptyList.add("Book 1");
+        nonEmptyList.add("Book 2");
+        when(storage.getReadBooks(ChatId)).thenReturn(nonEmptyList);
+        String response = messageHandling.parseMessage("/getread",ChatId);
+        verify(storage, times(1)).getReadBooks(ChatId);
+        Assert.assertEquals("Прочитанные книги:\n1. Book 1\n2. Book 2\n", response);
+    }
+
+
+    /**
+     * Проверка команды /getbyauthor для получения списка прочитанных книг указанного автора для случая, когда автор указан верно
+     */
+    @Test
+    public void testGetBooksByAuthorCommandWithExistingBooks() {
+        String author = "John Doe";
+        ArrayList<String> books = new ArrayList<>();
+        books.add("Book 1");
+        books.add("Book 2");
+        when(storage.getBooksByAuthor(author, ChatId)).thenReturn(books);
+        String response = messageHandling.parseMessage("/getbyauthor " + author,ChatId);
+        verify(storage, times(1)).getBooksByAuthor(author, ChatId);
+        Assert.assertEquals("Книги автора John Doe:\nBook 1\nBook 2", response);
+    }
+
+
+    /**
+     * Проверка команды /getbyauthor для получения списка прочитанных книг указанного автора для случая, когда авор указан неверно
+     */
+    @Test
+    public void testGetBooksByAuthorCommandWithNoBooks() {
+        String author = "Nonexistent Author";
+        when(storage.getBooksByAuthor(author, ChatId)).thenReturn(new ArrayList<>());
+        String response = messageHandling.parseMessage("/getbyauthor " + author,ChatId);
+        verify(storage, times(1)).getBooksByAuthor(author, ChatId);
+        Assert.assertEquals("Нет прочитанных книг этого автора.", response);
+    }
+
+
+
+    /**
+     * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году для случая, когда год указан неверно
+     */
+    @Test
+    public void testGetBooksByYearCommandWithNoBooks() {
+        int year = 1112;
+        when(storage.getBooksByYear(year, ChatId)).thenReturn(new ArrayList<>());
+        String response = messageHandling.parseMessage("/getbyyear " + year,ChatId);
+        verify(storage, times(1)).getBooksByYear(year, ChatId);
+        Assert.assertEquals("Нет прочитанных книг в этом году.", response);
+    }
+
+    /**
+     * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году для случая, когда год указан верно
+     */
+    @Test
+    public void testGetBooksByYearCommandWithExistingBooks() {
+        int year = 2020;
+        ArrayList<String> books = new ArrayList<>();
+        books.add("Book 1");
+        books.add("Book 2");
+        when(storage.getBooksByYear(year, ChatId)).thenReturn(books);
+        String response = messageHandling.parseMessage("/getbyyear " + year,ChatId);
+        verify(storage, times(1)).getBooksByYear(year, ChatId);
+        Assert.assertEquals("Книги 2020 года:\nBook 1\nBook 2", response);
+    }
+
+
+    /**
+     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда номер книги в списке указан верно
+     */
+    @Test
+    public void testRemoveBookCommandWithValidBookNumber() {
+        String message = "1";
+        ArrayList<String> readBooks = new ArrayList<>();
+        readBooks.add("Book 1");
+        readBooks.add("Book 2");
+        when(storage.getReadBooks(ChatId)).thenReturn(readBooks);
+        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
+        verify(storage, times(1)).updateReadBooks(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Книга Book 1 успешно удалена из списка прочитанных!", response);
+    }
+
+
+    /**
+     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда номер книги в списке указан неверно
+     */
+    @Test
+    public void testRemoveBookCommandWithInvalidBookNumber() {
+        String message = "3";
+        ArrayList<String> readBooks = new ArrayList<>();
+        readBooks.add("Book 1");
+        readBooks.add("Book 2");
+        when(storage.getReadBooks(ChatId)).thenReturn(readBooks);
+        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
+        verify(storage, never()).updateReadBooks(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Указанный номер книги не существует.", response);
+    }
+
+
+    /**
+     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда указано не число
+     */
+    @Test
+    public void testRemoveBookCommandWithInvalidFormat() {
+        String message = "InvalidNumber";
+        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
+        verify(storage, never()).updateReadBooks(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Некорректный формат номера книги", response);
+    }
+
+
+    /**
+     * Проверка команды /editbook для случая, когда выполняется успешное редактирование книги с правильными данными
+     */
+    @Test
+    public void testEditBookCommandWithValidData() {
+        String message = "1\nNew Book\nNew Author\n2023";
+        ArrayList<String> readBooks = new ArrayList<>();
+        readBooks.add("Old Book\nOld Author\n2022");
+        when(storage.getAllValues(ChatId)).thenReturn(readBooks);
+        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
+        verify(storage, times(1)).editReadBook(eq("Old Book"), eq("Old Author"), eq(2022), eq("New Book"), eq("New Author"), eq(2023), eq(ChatId));
+        Assert.assertEquals("Книга 'Old Book' успешно заменена на книгу 'New Book' от автора New Author (год: 2023) в списке прочитанных!", response);
+    }
+
+
+    /**
+     * Проверка команды /editbook для случая, когда указанный номер книги недопустим (например, больше размера списка)
+     */
+    @Test
+    public void testEditBookCommandWithInvalidBookNumber() {
+        String message = "3\nNew Book\nNew Author\n2023";
+        ArrayList<String> readBooks = new ArrayList<>();
+        readBooks.add("Old Book\nOld Author\n2022");
+        when(storage.getAllValues(ChatId)).thenReturn(readBooks);
+        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
+        verify(storage, never()).editReadBook(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
+        Assert.assertEquals("Указанный уникальный номер книги не существует в списке прочитанных книг.", response);
+    }
+
+
+    /**
+     * Проверка команды /editbook для случая, когда данные книги введены в неверном формате.
+     */
+    @Test
+    public void testEditBookCommandWithInvalidDataFormat() {
+        String message = "InvalidData";
+        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
+        verify(storage, never()).editReadBook(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
+        Assert.assertEquals("Некорректный формат ввода. Используйте /editbook Уникальный_номер\n Новое_название\nНовый_автор\nНовый_год", response);
+    }
+
 
     /**
      * Проверяет команду получения цитаты.
