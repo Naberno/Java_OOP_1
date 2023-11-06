@@ -1,4 +1,5 @@
 package org.example;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -25,6 +26,7 @@ public class MessageHandling implements MessageProcessor {
     private PuzzleGame puzzleGame;
     private boolean puzzleMode;
 
+
     /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
      * а также устанавливает начальное значение режима головоломки как false.
@@ -49,7 +51,7 @@ public class MessageHandling implements MessageProcessor {
 
         if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
-        } else {
+        }else{
             response = handleDefaultMode(textMsg, chatId);
         }
 
@@ -88,6 +90,8 @@ public class MessageHandling implements MessageProcessor {
     }
 
 
+
+
     /**
      * Обработчик сообщений в режиме по умолчанию.
      *
@@ -103,7 +107,7 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.equals("/get") || textMsg.equals("Просвети")) {
             response = storage.getRandQuote();
         } else if (textMsg.equals("/genre")) {
-            response = "Здравствуйте, добро пожаловать в бот рекомендации книг! Выберите жанр:";
+            response = "Здравствуйте, добро пожаловать в бот рекомендации книг! Нажмите /chat и выберите жанр";
         } else if (textMsg.equals("Научная фантастика")) {
             response = "Прочитайте 'Автостопом по галактике', 'Время жить и время умирать' или 'Война миров'";
         } else if (textMsg.equals("Фэнтези")) {
@@ -123,15 +127,53 @@ public class MessageHandling implements MessageProcessor {
                 int year;
                 try {
                     year = Integer.parseInt(parts[2].trim());
-                    // Добавляем книгу в базу данных
-                    storage.addReadBook(title, author, year, chatId);
-                    response = "Книга '" + title + "' от автора " + author + " (год: " + year + ") успешно добавлена в список прочитанных!";
+
+                    // Проверяем существование книги в базе данных
+                    if (!storage.bookExists(title, author, year, chatId)) {
+                        // Если книги с такими данными нет, добавляем книгу в базу данных
+                        storage.addReadBook(title, author, year, chatId);
+                        response = "Книга '" + title + "' от автора " + author + " (год: " + year + ") успешно добавлена в список прочитанных!";
+                    } else {
+                        response = "Книга с указанным названием, автором и годом прочтения уже существует в базе данных.";
+                    }
                 } catch (NumberFormatException e) {
                     response = "Некорректный формат года прочтения.";
                 }
             } else {
-                response = "Некорректный формат ввода. Используйте /haveread Название книги\nАвтор\nГод прочтения";
+                response = "Некорректный формат ввода. Используйте /addbook Название книги\nАвтор\nГод прочтения";
             }
+
+
+    } else if (textMsg.startsWith("/replacebook")) {
+            // Получаем старые и новые данные книги, введенные пользователем
+            String[] parts = textMsg.substring(13).split("\n");
+            if (parts.length == 6 && parts[3].startsWith("to ")) {
+                String oldTitle = parts[0].trim();
+                String oldAuthor = parts[1].trim();
+                int oldYear;
+                // Получаем newTitle с третьего символа четвёртой строки
+                String newTitle = parts[3].substring(3).trim();
+                String newAuthor = parts[4].trim();
+                int newYear;
+                try {
+                    oldYear = Integer.parseInt(parts[2].trim());
+                    newYear = Integer.parseInt(parts[5].trim());
+
+                    // Проверяем существование старой книги в базе данных
+                    if (storage.bookExists(oldTitle, oldAuthor, oldYear, chatId)) {
+                        // Заменяем книгу в базе данных
+                        storage.replaceReadBook(oldTitle, oldAuthor, oldYear, newTitle, newAuthor, newYear, chatId);
+                        response = "Книга '" + oldTitle + "' от автора " + oldAuthor + " (год: " + oldYear + ") успешно заменена на книгу '" + newTitle + "' от автора " + newAuthor + " (год: " + newYear + ") в списке прочитанных!";
+                    } else {
+                        response = "Книга с указанными старым названием, автором и годом прочтения не найдена в базе данных.";
+                    }
+                } catch (NumberFormatException e) {
+                    response = "Некорректный формат года прочтения.";
+                }
+            } else {
+                response = "Некорректный формат ввода. Используйте /replace Старое_название\nСтарый_автор\nСтарый_год\nto Новое_название\nНовый_автор\nНовый_год";
+            }
+
 
 
         } else if (textMsg.equals("/clearread")) {
@@ -143,10 +185,15 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.equals("/getread")) {
             // Получаем список прочитанных книг
             ArrayList<String> readBooks = storage.getReadBooks(chatId);
-            response = "Прочитанные книги:\n" + String.join("\n", readBooks);
+
+            if (readBooks.isEmpty()) {
+                response = "Список прочитанных книг пуст.";
+            } else {
+                response = "Прочитанные книги:\n" + String.join("\n", readBooks);
+            }
 
 
-        } else if (textMsg.startsWith("/getbyauthor")) {
+    } else if (textMsg.startsWith("/getbyauthor")) {
             String author = textMsg.substring(13); // Получаем имя автора из сообщения
             ArrayList<String> booksByAuthor = storage.getBooksByAuthor(author, chatId);
             if (!booksByAuthor.isEmpty()) {
@@ -167,32 +214,42 @@ public class MessageHandling implements MessageProcessor {
 
 
         } else if (textMsg.startsWith("/removebook")) {
-        // Получаем название книги, автора и год прочтения, введенные пользователем
-        String[] parts = textMsg.substring(12).split("\n");
-        if (parts.length == 3) {
-            String title = parts[0].trim();
-            String author = parts[1].trim();
-            int year;
-            try {
-                year = Integer.parseInt(parts[2].trim());
-                // Удаляем книгу из базы данных
-                storage.RemoveReadBook(title, author, year, chatId);
-                response = "Книга '" + title + "' от автора " + author + " (год: " + year + ") успешно удалена из списка прочитанных!";
-            } catch (NumberFormatException e) {
-                response = "Некорректный формат года прочтения.";
+            // Получаем название книги, автора и год прочтения, введенные пользователем
+            String[] parts = textMsg.substring(12).split("\n");
+            if (parts.length == 3) {
+                String title = parts[0].trim();
+                String author = parts[1].trim();
+                int year;
+                try {
+                    year = Integer.parseInt(parts[2].trim());
+
+                    // Проверяем существование книги в базе данных
+                    if (storage.bookExists(title, author, year, chatId)) {
+                        // Удаляем книгу из базы данных
+                        storage.RemoveReadBook(title, author, year, chatId);
+                        response = "Книга '" + title + "' от автора " + author + " (год: " + year + ") успешно удалена из списка прочитанных!";
+                    } else {
+                        response = "Книга с указанным названием, автором и годом прочтения не найдена в базе данных.";
+                    }
+                } catch (NumberFormatException e) {
+                    response = "Некорректный формат года прочтения.";
+                }
+            } else {
+                response = "Некорректный формат ввода. Используйте /removebook Название книги\nавтор\nгод прочтения";
             }
-        } else {
-            response = "Некорректный формат ввода. Используйте /removebook Название книги\nавтор\nгод прочтения";
-        }
+
 
     } else if (textMsg.equals("/playpuzzle")) {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
 
+
     }else {
         response = textMsg;
     }
         return response;
     }
+
+
 }
