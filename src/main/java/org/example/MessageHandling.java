@@ -1,5 +1,4 @@
 package org.example;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -72,8 +71,6 @@ public class MessageHandling implements MessageProcessor {
             response = puzzleGame.getHint();
         } else if ((textMsg.equalsIgnoreCase("следующая загадка"))||(textMsg.equals("/anotheriddle"))) {
             response = puzzleGame.getNextPuzzle(chatId);
-        } else if (textMsg.equals("/statistic")) {
-            response = puzzleGame.getStatistics(chatId);
         } else if (textMsg.equals("/restart")) {
             response = puzzleGame.restart(chatId);
         } else if ((textMsg.equalsIgnoreCase("какой ответ"))||(textMsg.equals("/getanswer"))) {
@@ -81,7 +78,7 @@ public class MessageHandling implements MessageProcessor {
             /* } else if ((textMsg.equalsIgnoreCase("покажи нерешённые загадки"))||(textMsg.equals("/showriddles"))) {
             response = puzzleGame.getUnsolvedPuzzles(chatId); */
         } else if (textMsg.equals("/stoppuzzle")) {
-            response = "Режим головоломки завершен.";
+            response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);;
             puzzleMode = false; // Выход из режима головоломки
         } else {
             response = puzzleGame.checkAnswer(chatId, textMsg);
@@ -144,52 +141,62 @@ public class MessageHandling implements MessageProcessor {
             }
 
 
-    } else if (textMsg.startsWith("/replacebook")) {
-            // Получаем старые и новые данные книги, введенные пользователем
-            String[] parts = textMsg.substring(13).split("\n");
-            if (parts.length == 6 && parts[3].startsWith("to ")) {
-                String oldTitle = parts[0].trim();
-                String oldAuthor = parts[1].trim();
-                int oldYear;
-                // Получаем newTitle с третьего символа четвёртой строки
-                String newTitle = parts[3].substring(3).trim();
-                String newAuthor = parts[4].trim();
+        } else if (textMsg.startsWith("/editbook")) {
+            // Получаем уникальный номер книги и новые данные книги, введенные пользователем
+            String[] parts = textMsg.substring(10).split("\n");
+            if (parts.length == 4) {
+                int bookNumber;
+                String newTitle;
+                String newAuthor;
                 int newYear;
                 try {
-                    oldYear = Integer.parseInt(parts[2].trim());
-                    newYear = Integer.parseInt(parts[5].trim());
+                    // Получаем уникальный номер книги
+                    bookNumber = Integer.parseInt(parts[0].trim());
+                    // Получаем новые данные книги
+                    newTitle = parts[1].trim();
+                    newAuthor = parts[2].trim();
+                    newYear = Integer.parseInt(parts[3].trim());
 
-                    // Проверяем существование старой книги в базе данных
-                    if (storage.bookExists(oldTitle, oldAuthor, oldYear, chatId)) {
+                    // Проверяем существование книги с указанным уникальным номером в списке прочитанных книг
+                    ArrayList<String> readBooks = storage.getAllValues(chatId);
+                    if (bookNumber >= 1 && bookNumber <= readBooks.size()) {
+                        // Получаем старые данные книги
+                        String[] oldBookParts = readBooks.get(bookNumber - 1).split("\n");
+                        String oldTitle = oldBookParts[0];
+                        String oldAuthor = oldBookParts[1];
+                        int oldYear = Integer.parseInt(oldBookParts[2]);
+
                         // Заменяем книгу в базе данных
-                        storage.replaceReadBook(oldTitle, oldAuthor, oldYear, newTitle, newAuthor, newYear, chatId);
-                        response = "Книга '" + oldTitle + "' от автора " + oldAuthor + " (год: " + oldYear + ") успешно заменена на книгу '" + newTitle + "' от автора " + newAuthor + " (год: " + newYear + ") в списке прочитанных!";
+                        storage.editReadBook(oldTitle, oldAuthor, oldYear, newTitle, newAuthor, newYear, chatId);
+                        response = "Книга '" + oldTitle + "' успешно заменена на книгу '" + newTitle + "' от автора " + newAuthor + " (год: " + newYear + ") в списке прочитанных!";
                     } else {
-                        response = "Книга с указанными старым названием, автором и годом прочтения не найдена в базе данных.";
+                        response = "Указанный уникальный номер книги не существует в списке прочитанных книг.";
                     }
                 } catch (NumberFormatException e) {
-                    response = "Некорректный формат года прочтения.";
+                    response = "Некорректный формат уникального номера книги или года прочтения.";
                 }
             } else {
-                response = "Некорректный формат ввода. Используйте /replace Старое_название\nСтарый_автор\nСтарый_год\nto Новое_название\nНовый_автор\nНовый_год";
+                response = "Некорректный формат ввода. Используйте /editbook Уникальный_номер\n Новое_название\nНовый_автор\nНовый_год";
             }
 
 
-
-        } else if (textMsg.equals("/clearread")) {
+    } else if (textMsg.equals("/clearread")) {
             // Очищаем список прочитанных книг
             storage.clearReadBooks(chatId);
             response = "Список прочитанных книг очищен!";
 
 
         } else if (textMsg.equals("/getread")) {
-            // Получаем список прочитанных книг
+            // Получаем список прочитанных книг с уникальными номерами
             ArrayList<String> readBooks = storage.getReadBooks(chatId);
-
             if (readBooks.isEmpty()) {
                 response = "Список прочитанных книг пуст.";
             } else {
-                response = "Прочитанные книги:\n" + String.join("\n", readBooks);
+                StringBuilder responseBuilder = new StringBuilder("Прочитанные книги:\n");
+                for (int i = 0; i < readBooks.size(); i++) {
+                    responseBuilder.append(i + 1).append(". ").append(readBooks.get(i)).append("\n");
+                }
+                response = responseBuilder.toString();
             }
 
 
@@ -214,29 +221,21 @@ public class MessageHandling implements MessageProcessor {
 
 
         } else if (textMsg.startsWith("/removebook")) {
-            // Получаем название книги, автора и год прочтения, введенные пользователем
-            String[] parts = textMsg.substring(12).split("\n");
-            if (parts.length == 3) {
-                String title = parts[0].trim();
-                String author = parts[1].trim();
-                int year;
-                try {
-                    year = Integer.parseInt(parts[2].trim());
-
-                    // Проверяем существование книги в базе данных
-                    if (storage.bookExists(title, author, year, chatId)) {
-                        // Удаляем книгу из базы данных
-                        storage.RemoveReadBook(title, author, year, chatId);
-                        response = "Книга '" + title + "' от автора " + author + " (год: " + year + ") успешно удалена из списка прочитанных!";
-                    } else {
-                        response = "Книга с указанным названием, автором и годом прочтения не найдена в базе данных.";
-                    }
-                } catch (NumberFormatException e) {
-                    response = "Некорректный формат года прочтения.";
-                }
-            } else {
-                response = "Некорректный формат ввода. Используйте /removebook Название книги\nавтор\nгод прочтения";
-            }
+                   String message = textMsg.substring(12);
+                   try {
+                       int bookNumber = Integer.parseInt(message);
+                       ArrayList<String> readBooks = storage.getReadBooks(chatId);
+                       if (bookNumber >= 1 && bookNumber <= readBooks.size()) {
+                           String removedBook = readBooks.remove(bookNumber - 1); // Удаляем книгу и получаем ее данные
+                           // Здесь можно использовать removedBook для получения информации об удаленной книге
+                           storage.updateReadBooks(chatId, readBooks); // Обновляем список без удаленной книги
+                           response = "Книга " + removedBook + " успешно удалена из списка прочитанных!";
+                       } else {
+                           response = "Указанный номер книги не существует.";
+                       }
+                   } catch(NumberFormatException e) {
+                         response = "Некорректный формат номера книги";
+                   }
 
 
     } else if (textMsg.equals("/playpuzzle")) {
