@@ -121,10 +121,15 @@ class Puzzle {
  * Класс реализующий игру в загадки.
  */
 public class PuzzleGame implements PuzzleGameInterface {
+
     private Puzzle currentPuzzle;
+
     private Map<String, Puzzle> puzzles;
+
     private Map<Long, Integer> correctAnswers;
+
     private Map<Long, Integer> userAttempts;
+
     private Map<Long, List<String>> unsolvedPuzzles;
 
     /**
@@ -197,7 +202,7 @@ public class PuzzleGame implements PuzzleGameInterface {
                 correctAnswers.put(chatId, correctAnswers.getOrDefault(chatId, 0) + 1);
                 puzzles.remove(currentPuzzle.getQuestion());
                 if (puzzles.isEmpty()) {
-                    return "Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle для выхода из игры, или /statistic для получения статистики в текущей игре, или /restart для перезапуска игры";
+                    return "Поздравляю, вы решили все загадки! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново";
                 } else {
                     currentPuzzle = puzzles.get(getRandomPuzzle());
                     return "Верно! Следующая загадка: " + currentPuzzle.getQuestion();
@@ -206,7 +211,7 @@ public class PuzzleGame implements PuzzleGameInterface {
                 return "Неверно! Попробуйте еще раз.";
             }
         } else {
-            return "Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle для выхода из игры, или /statistic для получения статистики в текущей игре, или /restart для перезапуска игры";
+            return "Поздравляю, вы решили все загадки! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново";
         }
     }
 
@@ -247,7 +252,7 @@ public class PuzzleGame implements PuzzleGameInterface {
         userAttempts.put(chatId, 0);
 
         if (puzzles.isEmpty()) {
-            return "Все загадки решены! Пожалуйста, нажмите /stoppuzzle для выхода из игры, или /statistic для получения статистики в текущей игре, или /restart для перезапуска игры";
+            return "Все загадки решены! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново";
         } else {
             currentPuzzle = puzzles.get(getRandomPuzzle());
             return "Следующая загадка: " + currentPuzzle.getQuestion();
@@ -268,6 +273,26 @@ public class PuzzleGame implements PuzzleGameInterface {
         return "Правильных ответов: " + correct + "\nНеправильных ответов: " +
                 (20-correct) + "\nПроцент правильных ответов: " + percentage + "%";
     }
+
+    /*
+    /**
+     * Метод возвращает список нерешенных головоломок для указанного чата.
+     *
+     * @param chatId Идентификатор чата, для которого возвращаются нерешенные головоломки.
+     * @return Список нерешенных головоломок в виде текстового сообщения.
+     */
+    /*
+    public String getUnsolvedPuzzles(long chatId) {
+        List<String> unsolved = unsolvedPuzzles.getOrDefault(chatId, new ArrayList<>());
+
+        if (unsolved.isEmpty()) {
+            return "У вас нет нерешенных загадок.";
+        }
+
+        return "Нерешенные загадки:\n" + unsolved.stream().collect(Collectors.joining("\n"));
+    }
+*/
+
 
     /**
      * Метод перезапускает игровую сессию
@@ -328,7 +353,7 @@ public class PuzzleGame implements PuzzleGameInterface {
         userAttempts.put(chatId, 0);
 
         if (puzzles.isEmpty()) {
-            return answer + "\nПоздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle";
+            return answer + "\nПоздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново";
         } else {
             currentPuzzle = puzzles.get(getRandomPuzzle());
             return answer + "\nСледующая загадка: " + currentPuzzle.getQuestion();
@@ -336,7 +361,6 @@ public class PuzzleGame implements PuzzleGameInterface {
     }
 
 }
-
 
 
 
