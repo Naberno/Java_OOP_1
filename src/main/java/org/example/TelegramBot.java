@@ -7,13 +7,40 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+//это надо для ассистента
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import java.io.IOException;
+import org.json.JSONObject;
+import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
+
+
+/**
+ * Интерфейс для Телеграмм-бота.
+ */
+interface TelegramBotInterface {
+
+
+    /**
+     * Создание клавиатуры в боте.
+     *
+     * @return Объект ReplyKeyboardMarkup с настроенной клавиатурой.
+     */
+    ReplyKeyboardMarkup createKeyboard();
+}
+
 
 /**
  * Класс для реализации Телеграмм-бота
  */
-public class TelegramBot extends TelegramLongPollingBot {
+public class TelegramBot extends TelegramLongPollingBot implements TelegramBotInterface {
 
     /**
      * Токен для Telegram-бота.
@@ -28,12 +55,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     final private String BOT_NAME = "groobee";
 
     /**
-     * Экземпляр класса Storage.
-     * Эта переменная используется для хранения экземпляра хранилища.
-     */
-    private Storage storage;
-
-    /**
      * Экземпляр класса MessageHandling.
      * Эта переменная используется для хранения экземпляра обработки сообщения.
      */
@@ -44,9 +65,44 @@ public class TelegramBot extends TelegramLongPollingBot {
      * а MessageHandling - для обработки входящих сообщений от пользователя.
      */
     public TelegramBot() {
-        storage = new Storage();
         messageHandling = new MessageHandling();
     }
+
+
+    //это надо для ассистента
+    /* public class Gpt3Chat {
+        private static final String OPENAI_API_KEY = "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";
+        private static final String MODEL_NAME = "gpt-3.5-turbo-16k";
+
+        public static String generateResponse(String userMessage) throws IOException {
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
+
+            // Устанавливаем заголовки запроса
+            httpPost.setHeader("Content-Type", "application/json");
+            httpPost.setHeader("Authorization", "Bearer " + OPENAI_API_KEY);
+
+            // Устанавливаем текст запроса
+            String requestJson = "{\"messages\": [{\"role\": \"system\", \"content\": \"You: " + userMessage + "\"}], \"max_tokens\": 150, \"model\": \"" + MODEL_NAME + "\"}";
+            StringEntity entity = new StringEntity(requestJson);
+            httpPost.setEntity(entity);
+
+            // Отправляем запрос к OpenAI API
+            HttpEntity responseEntity = httpClient.execute(httpPost).getEntity();
+            String response = EntityUtils.toString(responseEntity);
+
+            // Закрываем HttpClient
+            httpClient.close();
+
+            // Обрабатываем JSON-ответ и извлекаем только текстовую часть ответа
+            JSONObject jsonResponse = new JSONObject(response);
+            JSONArray choices = jsonResponse.getJSONArray("choices");
+            JSONObject choice = choices.getJSONObject(0).getJSONObject("message");
+            String text = choice.getString("content").trim();
+
+            return text;
+        }
+    } */
 
     @Override
     public String getBotUsername() {
@@ -58,7 +114,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         return BOT_TOKEN;
     }
 
-
     /**
      * Получение и Отправка сообщения в чат пользователю
      */
@@ -67,20 +122,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             if (update.hasMessage() && update.getMessage().hasText()) {
                 //Извлекаем из объекта сообщение пользователя
-                Message inMess = update.getMessage();
+                Message message = update.getMessage();
+                String userMessage = message.getText();
                 //Достаем из inMess id чата пользователя
-                Long chatId = inMess.getChatId();
+                long chatId = message.getChatId();
                 //Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
-                String response = messageHandling.parseMessage(inMess.getText(), chatId);
+                String response = messageHandling.parseMessage(userMessage, chatId);
                 //Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
-                //Добавляем в наше сообщение id чата, а также наш ответ
-                outMess.setChatId(chatId.toString());
-                outMess.setText(response);
-                outMess.setReplyMarkup(createKeyboard());
-                //Отправка в чат
-                execute(outMess);
-            }
+                    //Добавляем в наше сообщение id чата, а также наш ответ
+                    outMess.setChatId(String.valueOf(chatId));
+                    outMess.setText(response);
+                    outMess.setReplyMarkup(createKeyboard());
+                    //Отправка в чат
+                    execute(outMess);
+                }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -88,20 +144,24 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 
     /**
-    * Метод для создания клавиатуры в боте
+     * Метод для создания клавиатуры в боте
      */
     public ReplyKeyboardMarkup createKeyboard() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("Детектив");
-        row1.add("Романтика");
+        row1.add("suggest me list of books in a DETECTIVE genre");
+        row1.add("suggest me list of books in a ROMANTIC genre");
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("Фэнтези");
-        row2.add("Научная фантастика");
+        row2.add("suggest me list of books in a FANTASY genre");
+        row2.add("suggest me list of books in a SCI-FI genre");
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add("/chat");
+        row3.add("/stopchat");
         keyboard.add(row1);
         keyboard.add(row2);
+        keyboard.add(row3);
         // Установка клавиатуры
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;
