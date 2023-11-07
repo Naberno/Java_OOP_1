@@ -340,7 +340,7 @@ public class BotTest {
         String response = bot.parseMessage("/anotheriddle", ChatId);
         Assert.assertTrue(response.startsWith("Следующая загадка:"));
     }
-    
+
     /**
      * Проверяет команду перезапуска игры в загадки.
      */
