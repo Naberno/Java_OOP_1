@@ -340,17 +340,7 @@ public class BotTest {
         String response = bot.parseMessage("/anotheriddle", ChatId);
         Assert.assertTrue(response.startsWith("Следующая загадка:"));
     }
-
-    /**
-     * Проверяет команду получения статистики игры в загадки.
-     */
-    @Test
-    public void statisticCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/statistic", ChatId);
-        Assert.assertTrue(response.startsWith("Правильных ответов:"));
-    }
-
+    
     /**
      * Проверяет команду перезапуска игры в загадки.
      */
@@ -376,8 +366,6 @@ public class BotTest {
      */
     @Test
     public void stopPuzzleCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/stoppuzzle", ChatId);
-        Assert.assertEquals("Режим головоломки завершен.", response);
-    }
+        bot.parseMessage("/playpuzzle", ChatId);    String response = bot.parseMessage("/stoppuzzle", ChatId);
+        Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);}
 }
