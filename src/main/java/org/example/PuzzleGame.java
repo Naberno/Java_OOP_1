@@ -310,26 +310,6 @@ public class PuzzleGame implements PuzzleGameInterface {
                 (20-correct) + "\nПроцент правильных ответов: " + percentage + "%";
     }
 
-    /*
-    /**
-     * Метод возвращает список нерешенных головоломок для указанного чата.
-     *
-     * @param chatId Идентификатор чата, для которого возвращаются нерешенные головоломки.
-     * @return Список нерешенных головоломок в виде текстового сообщения.
-     */
-    /*
-    public String getUnsolvedPuzzles(long chatId) {
-        List<String> unsolved = unsolvedPuzzles.getOrDefault(chatId, new ArrayList<>());
-
-        if (unsolved.isEmpty()) {
-            return "У вас нет нерешенных загадок.";
-        }
-
-        return "Нерешенные загадки:\n" + unsolved.stream().collect(Collectors.joining("\n"));
-    }
-*/
-
-
     /**
      * Метод перезапускает игровую сессию
      *

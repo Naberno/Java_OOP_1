@@ -21,8 +21,11 @@ import java.util.ArrayList;
  * Класс для обработки сообщений пользователя
  */
 public class MessageHandling implements MessageProcessor {
+
     private Storage storage;
+
     private PuzzleGame puzzleGame;
+
     private boolean puzzleMode;
 
 

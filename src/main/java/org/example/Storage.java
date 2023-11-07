@@ -183,7 +183,7 @@ class Storage implements BookStorage, QuoteStorage {
 
 
     /**
-     * Метод для замены книги в списке прочитанных книг по формату: старое_название /n старый_автор /n старый_год новое_название /n новый_автор /n новый_год
+     * Метод для замены книги в списке прочитанных книг по формату:  старое_название /n старый_автор /n старый_год новое_название /n новый_автор /n новый_год
      */
     public void editReadBook(String oldTitle, String oldAuthor, int oldYear, String newTitle, String newAuthor, int newYear, long chatId) {
         Connection connection = null;
@@ -501,7 +501,5 @@ class Storage implements BookStorage, QuoteStorage {
         }
         return allValues;
     }
-
-
 
 }
