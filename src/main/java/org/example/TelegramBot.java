@@ -58,7 +58,6 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         messageHandling = new MessageHandling();
     }
 
-    
     @Override
     public String getBotUsername() {
         return BOT_NAME;
