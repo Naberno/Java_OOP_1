@@ -8,16 +8,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-//это надо для ассистента
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import java.io.IOException;
-import org.json.JSONObject;
-import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,42 +58,7 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         messageHandling = new MessageHandling();
     }
 
-
-    //это надо для ассистента
-    /* public class Gpt3Chat {
-        private static final String OPENAI_API_KEY = "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";
-        private static final String MODEL_NAME = "gpt-3.5-turbo-16k";
-
-        public static String generateResponse(String userMessage) throws IOException {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-
-            // Устанавливаем заголовки запроса
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setHeader("Authorization", "Bearer " + OPENAI_API_KEY);
-
-            // Устанавливаем текст запроса
-            String requestJson = "{\"messages\": [{\"role\": \"system\", \"content\": \"You: " + userMessage + "\"}], \"max_tokens\": 150, \"model\": \"" + MODEL_NAME + "\"}";
-            StringEntity entity = new StringEntity(requestJson);
-            httpPost.setEntity(entity);
-
-            // Отправляем запрос к OpenAI API
-            HttpEntity responseEntity = httpClient.execute(httpPost).getEntity();
-            String response = EntityUtils.toString(responseEntity);
-
-            // Закрываем HttpClient
-            httpClient.close();
-
-            // Обрабатываем JSON-ответ и извлекаем только текстовую часть ответа
-            JSONObject jsonResponse = new JSONObject(response);
-            JSONArray choices = jsonResponse.getJSONArray("choices");
-            JSONObject choice = choices.getJSONObject(0).getJSONObject("message");
-            String text = choice.getString("content").trim();
-
-            return text;
-        }
-    } */
-
+    
     @Override
     public String getBotUsername() {
         return BOT_NAME;

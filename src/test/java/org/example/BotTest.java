@@ -311,4 +311,73 @@ public class BotTest {
         String response = bot.parseMessage("/get", ChatId);
         Assert.assertTrue(response.startsWith("Цитата:"));
     }
+
+    /**
+     * Проверяет команду начала игры в загадки.
+     */
+    @Test
+    public void playPuzzleCommandTest() {
+        String response = bot.parseMessage("/playpuzzle", ChatId);
+        Assert.assertTrue(response.startsWith("Добро пожаловать в игру в загадки! Начнем."));
+    }
+
+    /**
+     * Проверяет команду получения подсказки в игре в загадки.
+     */
+    @Test
+    public void getHintCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/gethint", ChatId);
+        Assert.assertTrue(response.startsWith("Подсказка:"));
+    }
+
+    /**
+     * Проверяет команду получения следующей загадки в игре.
+     */
+    @Test
+    public void anotherRiddleCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/anotheriddle", ChatId);
+        Assert.assertTrue(response.startsWith("Следующая загадка:"));
+    }
+
+    /**
+     * Проверяет команду получения статистики игры в загадки.
+     */
+    @Test
+    public void statisticCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/statistic", ChatId);
+        Assert.assertTrue(response.startsWith("Правильных ответов:"));
+    }
+
+    /**
+     * Проверяет команду перезапуска игры в загадки.
+     */
+    @Test
+    public void restartCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/restart", ChatId);
+        Assert.assertTrue(response.startsWith("Игра в загадки начата заново."));
+    }
+
+    /**
+     * Проверяет команду получения ответа на текущую загадку в игре.
+     */
+    @Test
+    public void getAnswerCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/getanswer", ChatId);
+        Assert.assertTrue(response.contains("Ответ на загадку"));
+    }
+
+    /**
+     * Проверяет команду завершения режима головоломки.
+     */
+    @Test
+    public void stopPuzzleCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/stoppuzzle", ChatId);
+        Assert.assertEquals("Режим головоломки завершен.", response);
+    }
 }

@@ -502,6 +502,8 @@ class Storage implements BookStorage, QuoteStorage {
         return allValues;
     }
 
+}
+
 
 
 }
