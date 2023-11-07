@@ -96,8 +96,7 @@ class Storage implements BookStorage, QuoteStorage {
     /**
      * Хранилище для цитат
      */
-    public Storage()
-    {
+    public Storage() {
         quoteList = new ArrayList<>();
         quoteList.add("Цитата: Начинать всегда стоит с того, что сеет сомнения. \n\nБорис Стругацкий.");
         quoteList.add("Цитата: 80% успеха - это появиться в нужном месте в нужное время.\n\nВуди Аллен");
@@ -107,10 +106,9 @@ class Storage implements BookStorage, QuoteStorage {
     /**
      * Метод для получения произвольной цитаты из quoteList
      */
-    public String getRandQuote()
-    {
+    public String getRandQuote() {
         //получаем случайное значение в интервале от 0 до самого большого индекса
-        int randValue = (int)(Math.random() * quoteList.size());
+        int randValue = (int) (Math.random() * quoteList.size());
         //Из коллекции получаем цитату со случайным индексом и возвращаем ее
         return quoteList.get(randValue);
     }
@@ -501,9 +499,4 @@ class Storage implements BookStorage, QuoteStorage {
         }
         return allValues;
     }
-
-}
-
-
-
 }

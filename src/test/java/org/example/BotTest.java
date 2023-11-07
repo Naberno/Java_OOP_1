@@ -33,7 +33,7 @@ public class BotTest {
     @Test
     public void GenreCommandTest() {
         String response = bot.parseMessage("/genre",ChatId);
-        Assert.assertEquals("Здравствуйте, добро пожаловать в бот рекомендации книг! Выберите жанр:", response);
+        Assert.assertEquals("Здравствуйте, добро пожаловать в бот рекомендации книг! Нажмите /chat и выберите жанр", response);
 
         /*
          * Проверка для жанра "Научная фантастика"
