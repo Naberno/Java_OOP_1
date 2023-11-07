@@ -24,6 +24,8 @@ public class MessageHandling implements MessageProcessor {
 
     private Storage storage;
 
+    private PuzzleGame puzzleGame;
+
     private boolean puzzleMode;
 
 
@@ -33,6 +35,7 @@ public class MessageHandling implements MessageProcessor {
      */
     public MessageHandling() {
         storage = new Storage();
+        puzzleGame = new PuzzleGame();
         puzzleMode = false;
     }
 
@@ -67,9 +70,27 @@ public class MessageHandling implements MessageProcessor {
      */
     private String handlePuzzleMode(String textMsg, long chatId) {
         String response;
-        response="nothing yet";
+        if ((textMsg.equalsIgnoreCase("дай подсказку"))||(textMsg.equals("/gethint"))) {
+            response = puzzleGame.getHint();
+        } else if ((textMsg.equalsIgnoreCase("следующая загадка"))||(textMsg.equals("/anotheriddle"))) {
+            response = puzzleGame.getNextPuzzle(chatId);
+        } else if (textMsg.equals("/restart")) {
+            response = puzzleGame.restart(chatId);
+        } else if ((textMsg.equalsIgnoreCase("какой ответ"))||(textMsg.equals("/getanswer"))) {
+            response = puzzleGame.getAnswerAndNextPuzzle(chatId);
+            /* } else if ((textMsg.equalsIgnoreCase("покажи нерешённые загадки"))||(textMsg.equals("/showriddles"))) {
+            response = puzzleGame.getUnsolvedPuzzles(chatId); */
+        } else if (textMsg.equals("/stoppuzzle")) {
+            response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);;
+            puzzleMode = false; // Выход из режима головоломки
+        } else {
+            response = puzzleGame.checkAnswer(chatId, textMsg);
+        }
         return response;
     }
+
+
+
 
     /**
      * Обработчик сообщений в режиме по умолчанию.
@@ -223,7 +244,7 @@ public class MessageHandling implements MessageProcessor {
     } else if (textMsg.equals("/playpuzzle")) {
             // Вход в режим головоломки
             puzzleMode = true;
-            response = "nothing yet";
+            response = puzzleGame.startPuzzle(chatId);
 
 
     }else {
@@ -234,5 +255,4 @@ public class MessageHandling implements MessageProcessor {
 
 
 }
-
 
