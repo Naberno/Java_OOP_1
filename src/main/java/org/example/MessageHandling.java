@@ -78,19 +78,29 @@ public class MessageHandling implements MessageProcessor {
             response = puzzleGame.restart(chatId);
         } else if ((textMsg.equalsIgnoreCase("какой ответ"))||(textMsg.equals("/getanswer"))) {
             response = puzzleGame.getAnswerAndNextPuzzle(chatId);
-            /* } else if ((textMsg.equalsIgnoreCase("покажи нерешённые загадки"))||(textMsg.equals("/showriddles"))) {
-            response = puzzleGame.getUnsolvedPuzzles(chatId); */
         } else if (textMsg.equals("/stoppuzzle")) {
-            response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);;
+            response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);
+
             puzzleMode = false; // Выход из режима головоломки
+        }else if (textMsg.startsWith("/checkanswer")) {
+            // Извлеките ответ пользователя из сообщения
+            String userAnswer = textMsg.substring("/checkanswer".length()).trim();
+            // Передайте ответ пользователя в PuzzleGame для проверки
+            response = puzzleGame.checkAnswer(chatId, userAnswer);
         } else {
             response = puzzleGame.checkAnswer(chatId, textMsg);
         }
         return response;
     }
 
-
-
+    /**
+     * Метод для установки объекта PuzzleGame.
+     *
+     * @param puzzleGame Объект PuzzleGame.
+     */
+    public void setPuzzleGame(PuzzleGame puzzleGame) {
+        this.puzzleGame = puzzleGame;
+    }
 
     /**
      * Обработчик сообщений в режиме по умолчанию.
@@ -245,9 +255,9 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
+        }
 
-
-    }else {
+    else {
         response = textMsg;
     }
         return response;
