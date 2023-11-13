@@ -1,4 +1,5 @@
 package org.example;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,8 +12,9 @@ import java.util.ArrayList;
 import static org.mockito.Mockito.*;
 
 public class BotTest {
+
     private long ChatId;
-    private  MessageHandling bot ;
+    private MessageHandling bot;
 
     @Mock
     private Storage storage;
@@ -32,30 +34,22 @@ public class BotTest {
      */
     @Test
     public void GenreCommandTest() {
-        String response = bot.parseMessage("/genre",ChatId);
+        String response = bot.parseMessage("/genre", ChatId);
         Assert.assertEquals("Здравствуйте, добро пожаловать в бот рекомендации книг! Нажмите /chat и выберите жанр", response);
 
-        /*
-         * Проверка для жанра "Научная фантастика"
-         */
+         // Проверка для жанра "Научная фантастика"
         response = bot.parseMessage("Научная фантастика", ChatId);
         Assert.assertEquals("Прочитайте 'Автостопом по галактике', 'Время жить и время умирать' или 'Война миров'", response);
 
-        /*
-         * Проверка для жанра "Фэнтези"
-         */
+        //Проверка для жанра "Фэнтези"
         response = bot.parseMessage("Фэнтези", ChatId);
         Assert.assertEquals("Прочитайте 'Хоббит', 'Игра престолов' или 'Гарри Поттер'", response);
 
-        /*
-         * Проверка для жанра "Романтика"
-         */
+        // Проверка для жанра "Романтика"
         response = bot.parseMessage("Романтика", ChatId);
         Assert.assertEquals("Прочитайте 'Великий Гетсби', 'Триумфальная арка' или 'Поющие в терновнике'", response);
 
-        /*
-         * Проверка для жанра "Детектив"
-         */
+        // Проверка для жанра "Детектив"
         response = bot.parseMessage("Детектив", ChatId);
         Assert.assertEquals("Прочитайте 'Убийство в восточном экспрессе', 'Снеговик' или 'Собака Баскервилей'", response);
     }
@@ -138,7 +132,7 @@ public class BotTest {
     public void testGetReadBooksCommandWithEmptyList() {
         ArrayList<String> emptyList = new ArrayList<>();
         when(storage.getReadBooks(ChatId)).thenReturn(emptyList);
-        String response = messageHandling.parseMessage("/getread",ChatId);
+        String response = messageHandling.parseMessage("/getread", ChatId);
         verify(storage, times(1)).getReadBooks(ChatId);
         Assert.assertEquals("Список прочитанных книг пуст.", response);
     }
@@ -153,7 +147,7 @@ public class BotTest {
         nonEmptyList.add("Book 1");
         nonEmptyList.add("Book 2");
         when(storage.getReadBooks(ChatId)).thenReturn(nonEmptyList);
-        String response = messageHandling.parseMessage("/getread",ChatId);
+        String response = messageHandling.parseMessage("/getread", ChatId);
         verify(storage, times(1)).getReadBooks(ChatId);
         Assert.assertEquals("Прочитанные книги:\n1. Book 1\n2. Book 2\n", response);
     }
@@ -169,7 +163,7 @@ public class BotTest {
         books.add("Book 1");
         books.add("Book 2");
         when(storage.getBooksByAuthor(author, ChatId)).thenReturn(books);
-        String response = messageHandling.parseMessage("/getbyauthor " + author,ChatId);
+        String response = messageHandling.parseMessage("/getbyauthor " + author, ChatId);
         verify(storage, times(1)).getBooksByAuthor(author, ChatId);
         Assert.assertEquals("Книги автора John Doe:\nBook 1\nBook 2", response);
     }
@@ -182,11 +176,10 @@ public class BotTest {
     public void testGetBooksByAuthorCommandWithNoBooks() {
         String author = "Nonexistent Author";
         when(storage.getBooksByAuthor(author, ChatId)).thenReturn(new ArrayList<>());
-        String response = messageHandling.parseMessage("/getbyauthor " + author,ChatId);
+        String response = messageHandling.parseMessage("/getbyauthor " + author, ChatId);
         verify(storage, times(1)).getBooksByAuthor(author, ChatId);
         Assert.assertEquals("Нет прочитанных книг этого автора.", response);
     }
-
 
 
     /**
@@ -196,7 +189,7 @@ public class BotTest {
     public void testGetBooksByYearCommandWithNoBooks() {
         int year = 1112;
         when(storage.getBooksByYear(year, ChatId)).thenReturn(new ArrayList<>());
-        String response = messageHandling.parseMessage("/getbyyear " + year,ChatId);
+        String response = messageHandling.parseMessage("/getbyyear " + year, ChatId);
         verify(storage, times(1)).getBooksByYear(year, ChatId);
         Assert.assertEquals("Нет прочитанных книг в этом году.", response);
     }
@@ -211,7 +204,7 @@ public class BotTest {
         books.add("Book 1");
         books.add("Book 2");
         when(storage.getBooksByYear(year, ChatId)).thenReturn(books);
-        String response = messageHandling.parseMessage("/getbyyear " + year,ChatId);
+        String response = messageHandling.parseMessage("/getbyyear " + year, ChatId);
         verify(storage, times(1)).getBooksByYear(year, ChatId);
         Assert.assertEquals("Книги 2020 года:\nBook 1\nBook 2", response);
     }
@@ -366,6 +359,36 @@ public class BotTest {
      */
     @Test
     public void stopPuzzleCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);    String response = bot.parseMessage("/stoppuzzle", ChatId);
-        Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);}
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/stoppuzzle", ChatId);
+        Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);
+    }
+
+    /**
+     * Проверка для ответа пользователя на загадку
+     */
+    @Test
+    public void answerInPuzzleModeTest() {
+        // Создаем загадку
+        String question = "Вопрос по загадке";
+        String userCorrectAnswer = "Правильный ответ";
+        String userWrongAnswer = "Неправильный ответ";
+
+        PuzzleGame puzzleGame = mock(PuzzleGame.class);
+        when(puzzleGame.checkAnswer(anyLong(), eq(userCorrectAnswer)))
+                .thenReturn("Верно! Следующая загадка: " + question);
+        when(puzzleGame.checkAnswer(anyLong(), eq(userWrongAnswer)))
+                .thenReturn("Неверно. Попробуйте еще раз.");
+
+        MessageHandling messageHandling = new MessageHandling();
+        messageHandling.setPuzzleGame(puzzleGame);
+        messageHandling.parseMessage("/playpuzzle", ChatId);
+        // Проверяем правильный ответ
+        String correctResponse = messageHandling.parseMessage(userCorrectAnswer, ChatId);
+        Assert.assertEquals("Верно! Следующая загадка: " + question, correctResponse);
+        // Проверяем неправильный ответ
+        String wrongResponse = messageHandling.parseMessage(userWrongAnswer, ChatId);
+        Assert.assertEquals("Неверно. Попробуйте еще раз.", wrongResponse);
+    }
+
 }
