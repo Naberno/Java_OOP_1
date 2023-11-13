@@ -5,15 +5,16 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Mock;
-
-import java.util.ArrayList;
-
+import java.util.*;
 import static org.mockito.Mockito.*;
 
-public class BotTest {
+public class BotTest implements BotTestInterface {
     private long ChatId;
     private  MessageHandling bot ;
 
+    private PuzzleGame puzzleGame;
+
+    private Map<String, Puzzle>  puzzles;
     @Mock
     private Storage storage;
 
@@ -25,6 +26,8 @@ public class BotTest {
         ChatId = 12345L;
         bot = new MessageHandling();
         MockitoAnnotations.initMocks(this);
+        puzzleGame = new PuzzleGame();
+        puzzles = new HashMap<>();
     }
 
     /**
@@ -312,23 +315,143 @@ public class BotTest {
         Assert.assertTrue(response.startsWith("Цитата:"));
     }
 
+
     /**
      * Проверяет команду начала игры в загадки.
      */
     @Test
     public void playPuzzleCommandTest() {
-        String response = bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/playpuzzle", ChatId); // запуск режима загадок
         Assert.assertTrue(response.startsWith("Добро пожаловать в игру в загадки! Начнем."));
     }
+
+
+    /**
+     * Проверяет побочную команду очистки списка загадок, необходимую для последующих тестов.
+     */
+    @Test
+    public void ClearPuzzleCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId); // запуск режима загадок
+        String response = bot.parseMessage("/clearpuzzles 31415926", ChatId); //очистка списка загадок
+        Assert.assertEquals("Список загадок успешно очищен", response);
+    }
+
+    /**
+     * Проверяет побочную команду очистки текущей загадки, необходимую для последующих тестов.
+     */
+    @Test
+    public void СlearCurrentPuzzleCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId); // запуск режима загадок
+        String response = bot.parseMessage("/clearcurrentpuzzle 31415926", ChatId); //очистка списка загадок
+        Assert.assertEquals("Текущая загадка успешно удалена", response);
+    }
+
+    /**
+     * Проверяет побочную команду устанавки текущей загадки и списка загадок
+     */
+    @Test
+    public void SetPuzzlePuzzleCommandTest() {
+        bot.parseMessage("/playpuzzle", ChatId); // запуск режима загадок
+        String response = bot.parseMessage("/setpuzzle 31415926", ChatId); //очистка списка загадок
+        Assert.assertEquals("Новая загадка успешно установлена", response);
+    }
+
+    /**
+     * Проверяет, что произвольная загадка, вызываемая в сообщении командой начала игры в загадки
+     * содержится в списке всех загадок
+     */
+    @Test
+        public void testPlayPuzzleContainsRandomPuzzle() {
+            puzzles = puzzleGame.getPuzzles();
+            String response = bot.parseMessage("/playpuzzle",ChatId);
+            String puzzleQuestion = response.replace("Добро пожаловать в игру в загадки! Начнем.\nЗагадка: ", "");
+            Assert.assertTrue(puzzles.containsKey(puzzleQuestion));
+        }
+
+
+    /**
+     * Проверяет команду начала игры в загадки для случая, когда загадок нет.
+     */
+    @Test
+    public void testStartPuzzleGameWhenPuzzlesEmpty() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/clearpuzzles 31415926",ChatId); //очистка списка загадок
+        bot.parseMessage("/stoppuzzle",ChatId); // выход из режима загадок
+        String response = bot.parseMessage("/playpuzzle",ChatId); // запуск режима с пустым списком загадок
+        Assert.assertEquals("Все загадки решены!", response);
+    }
+
+    /**
+     * Тестирует команду /playpuzzle
+     *  Проверяет случай, когда одна конкретная загадка
+     */
+    @Test
+    public void testPlayPuzzleWithSetPuzzle() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/setpuzzle 31415926",ChatId); //замена текущей загадки
+        bot.parseMessage("/stoppuzzle",ChatId); // выход из режима загадок
+        String response = bot.parseMessage("/playpuzzle",ChatId); // запуск режима с пустым списком загадок
+        Assert.assertEquals("Добро пожаловать в игру в загадки! Начнем.\nЗагадка: Часто висит головой вниз, к небу стремится всегда, но полететь не может", response);
+    }
+
 
     /**
      * Проверяет команду получения подсказки в игре в загадки.
      */
     @Test
     public void getHintCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/gethint", ChatId);
+        bot.parseMessage("/playpuzzle", ChatId); // запуск режима загадок
+        String response = bot.parseMessage("/gethint", ChatId); //получение подсказки к текущей загадке
         Assert.assertTrue(response.startsWith("Подсказка:"));
+    }
+
+    /**
+     * Тестирует команду /gethint
+     * Тестирует случай, когда в puzzles есть загадки.
+     */
+    @Test
+    public void testGetHintContainsRandomHint() {
+        bot.parseMessage("/playpuzzle", ChatId); // Предварительно начнем загадку
+        String response = bot.parseMessage("/gethint", ChatId);
+        puzzles = puzzleGame.getPuzzles();
+        // Извлекаем подсказку из response
+        String hintFromResponse = extractHintFromResponse(response).trim();
+        // Проверяем, что подсказка содержится среди значений загадок
+        Assert.assertTrue(puzzles.values().stream().anyMatch(puzzle -> puzzle.getHint().equalsIgnoreCase(hintFromResponse)));
+    }
+
+    /**
+     * Метод для извлечения подсказки из строки response
+     */
+    public String extractHintFromResponse(String response) {
+        // Логика извлечения подсказки из строки response
+        // Например, если подсказка начинается после "Подсказка: "
+        int startIndex = response.indexOf("Подсказка: ") + "Подсказка: ".length();
+        return response.substring(startIndex);
+    }
+
+    /**
+     * Тестирует команду /gethint
+     *  Проверяет случай, когда загадок нет.
+     */
+    @Test
+    public void testGetHintWithoutCurrentPuzzle() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/clearcurrentpuzzle 31415926",ChatId); //очистка текущей загадки
+        String response = bot.parseMessage("/gethint", ChatId);
+        Assert.assertEquals("Нет текущей загадки.", response);
+    }
+
+    /**
+     * Тестирует команду /gethint
+     *  Проверяет случай, когда одна конкретная загадка
+     */
+    @Test
+    public void testGetHintWithSetPuzzle() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/setpuzzle 31415926",ChatId); //очистка текущей загадки
+        String response = bot.parseMessage("/gethint", ChatId);
+        Assert.assertEquals("Подсказка: Это падает с неба во время дождя", response);
     }
 
     /**
@@ -342,6 +465,55 @@ public class BotTest {
     }
 
     /**
+     * Проверяет, что произвольная загадка, вызываемая в сообщении командой следующая загадка в игре в загадки
+     * содержится в списке всех загадок
+     */
+    @Test
+    public void testAnotheRiddleContainsRandomPuzzle() {
+        puzzles = puzzleGame.getPuzzles();
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/anotheriddle",ChatId);
+        String puzzleQuestion = response.replace("Следующая загадка: ", "");
+        Assert.assertTrue(puzzles.containsKey(puzzleQuestion));
+    }
+
+
+    /**
+     * Проверяет команду следующей загадки в загадки для случая, когда текущей загадки нет.
+     */
+    @Test
+    public void testanotheriddleCurrentPuzzleEmpty() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/clearcurrentpuzzle 31415926",ChatId); //очистка списка загадок
+        String response = bot.parseMessage("/anotheriddle",ChatId); // запуск режима с пустым списком загадок
+        Assert.assertEquals("Нет текущей загадки!", response);
+    }
+
+
+    /**
+     * Проверяет команду следующей загадки в загадки для случая, когда загадок нет.
+     */
+    @Test
+    public void testanotheriddleWhenPuzzlesEmpty() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/clearpuzzles 31415926",ChatId); //очистка списка загадок
+        String response = bot.parseMessage("/anotheriddle",ChatId); // запуск режима с пустым списком загадок
+        Assert.assertEquals("Все загадки решены! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново", response);
+    }
+
+    /**
+     * Тестирует команду /anotheriddle
+     *  Проверяет случай, когда одна конкретная загадка
+     */
+    @Test
+    public void testNextPuzzleWithSetPuzzle() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/setpuzzle 31415926",ChatId); //очистка текущей загадки
+        String response = bot.parseMessage("/anotheriddle", ChatId);
+        Assert.assertEquals("Все загадки решены! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново", response);
+    }
+
+    /**
      * Проверяет команду перезапуска игры в загадки.
      */
     @Test
@@ -350,6 +522,21 @@ public class BotTest {
         String response = bot.parseMessage("/restart", ChatId);
         Assert.assertTrue(response.startsWith("Игра в загадки начата заново."));
     }
+
+
+    /**
+     * Проверяет, что произвольная загадка, вызываемая в сообщении командой перезапуска игры в загадки
+     * содержится в списке всех загадок
+     */
+    @Test
+    public void testRestartContainsRandomPuzzle() {
+        puzzles = puzzleGame.getPuzzles();
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/restart", ChatId);
+        String puzzleQuestion = response.replace("Игра в загадки начата заново.\n"+"Добро пожаловать в игру в загадки! Начнем.\nЗагадка: ", "");
+        Assert.assertTrue(puzzles.containsKey(puzzleQuestion));
+    }
+
 
     /**
      * Проверяет команду получения ответа на текущую загадку в игре.
@@ -361,11 +548,66 @@ public class BotTest {
         Assert.assertTrue(response.contains("Ответ на загадку"));
     }
 
+
+    /**
+     * Проверяет команду получения ответа на текущую загадку в игре с учетом любой произвольной загадки
+     */
+    @Test
+    public void testGetAnswerAndNextPuzzleContainsRandomAnswer() {
+        // Предварительно начнем загадку
+        messageHandling.parseMessage("/playpuzzle", ChatId);
+        // Вызов метода getAnswerAndNextPuzzle
+        String response = messageHandling.parseMessage("/getanswer", ChatId);
+        // Извлекаем ответ из response
+        String answerFromResponse = extractAnswerFromResponse(response).trim();
+        // Проверяем, что ответ содержится среди значений загадок
+        Assert.assertTrue(puzzleGame.getPuzzles().values().stream().anyMatch(puzzle -> puzzle.getAnswer().equalsIgnoreCase(answerFromResponse)));
+        // проверка, что извлеченный ответ answerFromResponse присутствует в коллекции значений всех загадок (puzzleGame.getPuzzles().values()). Мы используем anyMatch, чтобы проверить, что хотя бы для одной загадки в коллекции getPuzzles() её ответ совпадает с извлеченным ответом.
+    }
+
+    /**
+     *   Метод для извлечения ответа из строки response
+      */
+    public String extractAnswerFromResponse(String response) {
+        // Логика извлечения ответа из строки response
+        // Например, если ответ начинается после "Ответ на загадку: "
+        int startIndex = response.indexOf("Ответ на загадку: ") + "Ответ на загадку: ".length();
+        int endIndex = response.indexOf(".", startIndex);
+        return response.substring(startIndex, endIndex);
+    }
+
+
+    /**
+     * Тестирует команду /getanswer
+     *  Проверяет случай, когда загадок нет.
+     */
+    @Test
+    public void testGetAnswerWithoutCurrentPuzzle() {
+        messageHandling.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        messageHandling.parseMessage("/clearcurrentpuzzle 31415926",ChatId); //очистка текущей загадки
+        String response = messageHandling.parseMessage("/getanswer", ChatId);
+        Assert.assertEquals("Нет текущей загадки.", response);
+    }
+
+
+    /**
+     * Тестирует команду /getanswer
+     *  Проверяет случай, когда одна конкретная загадка
+     */
+    @Test
+    public void testGetAnswerWithSetPuzzle() {
+        bot.parseMessage("/playpuzzle",ChatId); // запуск режима загадок
+        bot.parseMessage("/setpuzzle 31415926",ChatId); //очистка текущей загадки
+        String response = bot.parseMessage("/getanswer", ChatId);
+        Assert.assertEquals("Ответ на загадку: Капля.\nВсе загадки решены! Поздравляю, вы решили все загадки! Пожалуйста, нажмите /stoppuzzle, чтобы завершить игру и посмотреть статистику, либо /restart, чтобы начать заново", response);
+    }
+
     /**
      * Проверяет команду завершения режима головоломки.
      */
     @Test
     public void stopPuzzleCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);    String response = bot.parseMessage("/stoppuzzle", ChatId);
+        bot.parseMessage("/playpuzzle", ChatId);
+        String response = bot.parseMessage("/stoppuzzle", ChatId);
         Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);}
 }
