@@ -1,26 +1,11 @@
 package org.example;
 import java.util.ArrayList;
 
-/**
- * Интерфейс для обработки сообщений пользователя
- */
- interface MessageProcessor {
-
-    /**
-     * Обрабатывает текстовое сообщение пользователя и возвращает ответ.
-     *
-     * @param textMsg Текстовое сообщение пользователя.
-     * @param chatId  Идентификатор чата пользователя.
-     * @return Ответ на сообщение пользователя.
-     */
-    String parseMessage (String textMsg, long chatId);
-}
-
 
 /**
  * Класс для обработки сообщений пользователя
  */
-public class MessageHandling implements MessageProcessor {
+public class MessageHandling implements MessageHandlingInterface {
 
     private Storage storage;
 
@@ -28,6 +13,7 @@ public class MessageHandling implements MessageProcessor {
 
     private boolean puzzleMode;
 
+    private final String ADMIN_PASSWORD = " 31415926";
 
     /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
@@ -39,6 +25,11 @@ public class MessageHandling implements MessageProcessor {
         puzzleMode = false;
     }
 
+    private boolean isAdmin(String password) {
+        // Ваша реализация аутентификации (например, сравнение с хешем пароля)
+        // Это просто пример, и вы должны использовать более безопасные методы хеширования паролей
+        return password.equals(ADMIN_PASSWORD);
+    }
 
     /**
      * Метод для обработки входящего текстового сообщения от пользователя.
@@ -78,8 +69,44 @@ public class MessageHandling implements MessageProcessor {
             response = puzzleGame.restart(chatId);
         } else if ((textMsg.equalsIgnoreCase("какой ответ"))||(textMsg.equals("/getanswer"))) {
             response = puzzleGame.getAnswerAndNextPuzzle(chatId);
-            /* } else if ((textMsg.equalsIgnoreCase("покажи нерешённые загадки"))||(textMsg.equals("/showriddles"))) {
-            response = puzzleGame.getUnsolvedPuzzles(chatId); */
+
+
+            //служебные проверки, не используются в чате с ботом
+        } else if (textMsg.startsWith("/clearpuzzles")) {
+            // Извлечение пароля из команды
+            String password = textMsg.substring("/clearpuzzles".length());
+            // Проверка пароля
+            if ((!isAdmin(password))||(textMsg.equals("/clearpuzzles"))) {
+                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
+            } else {
+                puzzleGame.clearPuzzle (chatId);
+                response = "Список загадок успешно очищен";
+            }
+
+
+        } else if (textMsg.startsWith("/clearcurrentpuzzle")) {
+            // Извлечение пароля из команды
+            String password = textMsg.substring("/clearcurrentpuzzle".length());
+            // Проверка пароля
+            if ((!isAdmin(password)) || (textMsg.equals("/clearcurrentpuzzle"))) {
+                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
+            } else {
+                puzzleGame.clearCurrentPuzzle();
+                response = "Текущая загадка успешно удалена";
+            }
+
+
+        }else if (textMsg.startsWith("/setpuzzle")){
+            String password = textMsg.substring("/setpuzzle".length());
+            // Проверка пароля
+            if ((!isAdmin(password)) || (textMsg.equals("/setpuzzle"))) {
+                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
+            } else {
+                puzzleGame.setPuzzle(chatId);
+                response = "Новая загадка успешно установлена";
+            }
+
+
         } else if (textMsg.equals("/stoppuzzle")) {
             response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);;
             puzzleMode = false; // Выход из режима головоломки
@@ -88,8 +115,6 @@ public class MessageHandling implements MessageProcessor {
         }
         return response;
     }
-
-
 
 
     /**
@@ -255,5 +280,4 @@ public class MessageHandling implements MessageProcessor {
 
 
 }
-
 
