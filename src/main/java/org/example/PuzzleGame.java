@@ -1,4 +1,4 @@
-package org.example;
+kage org.example;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -315,41 +315,27 @@ public class PuzzleGame implements PuzzleGameInterface {
         return answer + "\n" + nextPuzzleMessage;
     }
 
+
     /**
-     * Служебный метод, возвращает все загадки игры
+     * возвращает все загадки из спичка загадок puzzle
      */
     public Map<String, Puzzle> getPuzzles() {
         return puzzles;
     }
 
-    /**
-     * Служебный метод, очищает список всех загадок
-     * @param chatId
-     */
-    public void clearPuzzle (long chatId){
-        userAttempts.remove(chatId);
-        correctAnswers.remove(chatId);
-        puzzles.clear();
-        unsolvedPuzzles.remove(chatId);
-    }
 
     /**
-     * Служебный метод, удаляет текущую загадку
+     * устанавливает новый список загадок puzzle
      */
-    public void clearCurrentPuzzle(){
-        currentPuzzle=null;
+    public void setPuzzles (Map<String, Puzzle> puzzles){
+        this.puzzles= puzzles;
     }
 
+
     /**
-     * Служебный метод, устанавливает текущую загадку и список загадок
+     * устанавливает новую текущую загадку
      */
-    public void setPuzzle(long chatId){
-        // Сброс данных пользователя и доступных загадок
-        userAttempts.remove(chatId);
-        correctAnswers.remove(chatId);
-        puzzles.clear();
-        unsolvedPuzzles.remove(chatId);
-        currentPuzzle = new Puzzle("Часто висит головой вниз, к небу стремится всегда, но полететь не может", "Капля", "Это падает с неба во время дождя");
-        puzzles.put("Часто висит головой вниз, к небу стремится всегда, но полететь не может", new Puzzle("Часто висит головой вниз, к небу стремится всегда, но полететь не может", "Капля", "Это падает с неба во время дождя"));
+    public void setCurrentPuzzle (Puzzle currentPuzzle){
+        this.currentPuzzle = currentPuzzle;
     }
 }
