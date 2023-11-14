@@ -133,16 +133,10 @@ public interface BotTestInterface {
     void CitationCommandTest();
 
     /**
-     * Проверяет команду начала игры в загадки.
+     * Проверяет команду /playpuzzle - начала игры в загадки.
      */
     @Test
     void playPuzzleCommandTest();
-
-    /**
-     * Проверяет побочную команду очистки списка загадок, необходимую для последующих тестов.
-     */
-    @Test
-    void ClearPuzzleCommandTest();
 
     /**
      * Проверяет, что произвольная загадка, вызываемая в сообщении командой начала игры в загадки
@@ -152,35 +146,50 @@ public interface BotTestInterface {
     void testPlayPuzzleContainsRandomPuzzle();
 
     /**
-     * Проверяет команду начала игры в загадки для случая, когда загадок нет.
+     * Тестирует метод startPuzzle
+     * Проверяет случай, когда все загадки решены.
      */
     @Test
-    void testStartPuzzleGameWhenPuzzlesEmpty();
+    void testStartPuzzleGameWhenPuzzlesIsEmpty();
 
     /**
-     * Проверяет команду получения подсказки в игре в загадки.
+     * Тестирует метод startPuzzle
+     * Тестирует случай, когда в puzzles всего одна загадка.
+     */
+    @Test
+    void testStartPuzzleGameWhenPuzzlesNotEmpty();
+
+    /**
+     * Тестирует случай правильного ответа на загадку после обращения к методу startPuzzle и checkAnswer
+     */
+    @Test
+    void testCorrectAnswerAfterStartPuzzle();
+
+    /**
+     * Тестирует случай неправильного ответа на загадку после обращения к методу startPuzzle и checkAnswer
+     */
+    @Test
+    void testIncorrectAnswerAfterStartPuzzle();
+
+    /**
+     * Проверяет команду /gethint - получения подсказки в игре в загадки.
      */
     @Test
     void getHintCommandTest();
 
     /**
-     * Тестирует команду /gethint
-     * Тестирует случай, когда в puzzles есть загадки.
+     * Тестирует метод getHint,
+     * Тестирует случай, когда установлена конкретная текущая загадка - currentPuzzle
      */
     @Test
-    void testGetHintContainsRandomHint();
+    void testGetHintWithDefiniteCurrentPuzzle();
 
     /**
-     * Метод для извлечения подсказки из строки response
-     */
-     String extractHintFromResponse(String response);
-
-    /**
-     * Тестирует команду /gethint
-     *  Проверяет случай, когда загадок нет.
+     * Тестирует метод getHint,
+     * Тестирует случай, когда нет текущей загадки - currentPuzzle
      */
     @Test
-    void testGetHintWithoutCurrentPuzzle();
+    void testGetHintWithNoCurrentPuzzle();
 
     /**
      * Проверяет команду получения следующей загадки в игре.
@@ -189,20 +198,28 @@ public interface BotTestInterface {
     void anotherRiddleCommandTest();
 
     /**
-     * Проверяет, что произвольная загадка, вызываемая в сообщении командой следующая загадка в игре в загадки
+     * Тестирует команду /anotheriddle для прокерки, что произвольная загадка, вызываемая в сообщении командой следующая загадка в игре в загадки
      * содержится в списке всех загадок
      */
     @Test
     void testAnotheRiddleContainsRandomPuzzle();
 
     /**
-     * Проверяет команду начала игры в загадки для случая, когда текущей загадки нет.
+     * Тестирует метод getNextPuzzle,
+     * Тестирует случай правильного ответа на загадку после обращения к методу getNextPuzzle и checkAnswer
      */
     @Test
-    void testanotheriddleCurrentPuzzleEmpty();
+    void testAnotheRiddlerWithDefinitiveCurrentPuzzleAndRightAnswer();
 
     /**
-     * Проверяет команду начала игры в загадки для случая, когда загадок нет.
+     * Тестирует метод getNextPuzzle,
+     * Тестирует случай правильного ответа на загадку после обращения к методу getNextPuzzle и checkAnswer
+     */
+    @Test
+    void testAnotheRiddlerWithDefinitiveCurrentPuzzleAndWrongAnswer();
+
+    /**
+     * Проверяет команду следующей загадки в загадки для случая, когда загадок нет.
      */
     @Test
     void testanotheriddleWhenPuzzlesEmpty();
@@ -221,73 +238,28 @@ public interface BotTestInterface {
     void testRestartContainsRandomPuzzle();
 
     /**
-     * Проверяет команду получения ответа на текущую загадку в игре.
+     * Проверяет команду /getanswer получения ответа на текущую загадку в игре.
      */
     @Test
     void getAnswerCommandTest();
 
     /**
-     * Проверяет команду получения ответа на текущую загадку в игре с учетом любой произвольной загадки
+     * Тестирует метод getAnswerAndNextPuzzle
+     * Проверяет случай, когда усановлена конкретная текущая загадка
      */
     @Test
-    void testGetAnswerAndNextPuzzleContainsRandomAnswer();
+    void testGetAnswerAndNextPuzzleWithDefinitiveCurrentPuzzle();
 
     /**
-     *   Метод для извлечения ответа из строки response
-     */
-   String extractAnswerFromResponse(String response);
-
-    /**
-     * Тестирует команду /getanswer
-     *  Проверяет случай, когда загадок нет.
+     * Тестирует метод getAnswerAndNextPuzzle
+     *  Проверяет случай, когда текущей загадки нет
      */
     @Test
-    void testGetAnswerWithoutCurrentPuzzle();
+    void testGetAnswerAndNextPuzzleWithNoCurrentPuzzle();
 
     /**
      * Проверяет команду завершения режима головоломки.
      */
     @Test
     void stopPuzzleCommandTest();
-
-    /**
-     * Тестирует команду /gethint
-     *  Проверяет случай, когда одна конкретная загадка
-     */
-    @Test
-    void testGetHintWithSetPuzzle();
-
-    /**
-     * Тестирует команду /playpuzzle
-     *  Проверяет случай, когда одна конкретная загадка
-     */
-    @Test
-    void testPlayPuzzleWithSetPuzzle();
-
-    /**
-     * Тестирует команду /getanswer
-     *  Проверяет случай, когда одна конкретная загадка
-     */
-    @Test
-    void testGetAnswerWithSetPuzzle();
-
-    /**
-     * Тестирует команду /anotheriddle
-     *  Проверяет случай, когда одна конкретная загадка
-     */
-    @Test
-    void testNextPuzzleWithSetPuzzle();
-
-    /**
-     * Проверяет побочную команду очистки текущей загадки, необходимую для последующих тестов.
-     */
-    @Test
-    void СlearCurrentPuzzleCommandTest();
-
-    /**
-     * Проверяет побочную команду устанавки текущей загадки и списка загадок
-     */
-    @Test
-    void SetPuzzlePuzzleCommandTest();
 }
-
