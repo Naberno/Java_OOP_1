@@ -13,7 +13,6 @@ public class MessageHandling implements MessageHandlingInterface {
 
     private boolean puzzleMode;
 
-    private final String ADMIN_PASSWORD = " 31415926";
 
     /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
@@ -23,12 +22,6 @@ public class MessageHandling implements MessageHandlingInterface {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
         puzzleMode = false;
-    }
-
-    private boolean isAdmin(String password) {
-        // Ваша реализация аутентификации (например, сравнение с хешем пароля)
-        // Это просто пример, и вы должны использовать более безопасные методы хеширования паролей
-        return password.equals(ADMIN_PASSWORD);
     }
 
     /**
@@ -69,44 +62,6 @@ public class MessageHandling implements MessageHandlingInterface {
             response = puzzleGame.restart(chatId);
         } else if ((textMsg.equalsIgnoreCase("какой ответ"))||(textMsg.equals("/getanswer"))) {
             response = puzzleGame.getAnswerAndNextPuzzle(chatId);
-
-
-            //служебные проверки, не используются в чате с ботом
-        } else if (textMsg.startsWith("/clearpuzzles")) {
-            // Извлечение пароля из команды
-            String password = textMsg.substring("/clearpuzzles".length());
-            // Проверка пароля
-            if ((!isAdmin(password))||(textMsg.equals("/clearpuzzles"))) {
-                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
-            } else {
-                puzzleGame.clearPuzzle (chatId);
-                response = "Список загадок успешно очищен";
-            }
-
-
-        } else if (textMsg.startsWith("/clearcurrentpuzzle")) {
-            // Извлечение пароля из команды
-            String password = textMsg.substring("/clearcurrentpuzzle".length());
-            // Проверка пароля
-            if ((!isAdmin(password)) || (textMsg.equals("/clearcurrentpuzzle"))) {
-                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
-            } else {
-                puzzleGame.clearCurrentPuzzle();
-                response = "Текущая загадка успешно удалена";
-            }
-
-
-        }else if (textMsg.startsWith("/setpuzzle")){
-            String password = textMsg.substring("/setpuzzle".length());
-            // Проверка пароля
-            if ((!isAdmin(password)) || (textMsg.equals("/setpuzzle"))) {
-                response = "Неверный пароль. Недостаточно прав для выполнения этой команды.";
-            } else {
-                puzzleGame.setPuzzle(chatId);
-                response = "Новая загадка успешно установлена";
-            }
-
-
         } else if (textMsg.equals("/stoppuzzle")) {
             response = "Режим головоломки завершен.\n" + puzzleGame.getStatistics(chatId);;
             puzzleMode = false; // Выход из режима головоломки
