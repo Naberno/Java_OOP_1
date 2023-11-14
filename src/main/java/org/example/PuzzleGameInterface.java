@@ -71,23 +71,17 @@ public interface PuzzleGameInterface {
     String getRandomPuzzle();
 
     /**
-     * Служебный метод, устанавливает текущую загадку и список загадок
+     * устанавливает новый список загадок puzzle
      */
-    void setPuzzle(long chatId);
+     void setPuzzles (Map<String, Puzzle> puzzles);
 
     /**
-     * Служебный метод, удаляет текущую загадку
-     */
-    void clearCurrentPuzzle();
-
-    /**
-     * Служебный метод, возвращает все загадки игры
+     * возвращает все загадки из списка загадок puzzle
      */
     Map<String, Puzzle> getPuzzles();
 
     /**
-     * Служебный метод, очищает список всех загадок
-     * @param chatId
+     * устанавливает новую текущую загадку
      */
-    void clearPuzzle (long chatId);
+    void setCurrentPuzzle (Puzzle currentPuzzle);
 }
