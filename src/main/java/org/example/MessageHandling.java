@@ -94,15 +94,6 @@ public class MessageHandling implements MessageProcessor {
     }
 
     /**
-     * Метод для установки объекта PuzzleGame.
-     *
-     * @param puzzleGame Объект PuzzleGame.
-     */
-    public void setPuzzleGame(PuzzleGame puzzleGame) {
-        this.puzzleGame = puzzleGame;
-    }
-
-    /**
      * Обработчик сообщений в режиме по умолчанию.
      *
      * @param textMsg Входящий текстовый запрос от пользователя.
