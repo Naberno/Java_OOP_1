@@ -398,6 +398,4 @@ public class BotTest{
         String result = game.checkAnswer(ChatId, "any");
         Assert.assertEquals("Нет текущей загадки.", result);
     }
-
-
 }
