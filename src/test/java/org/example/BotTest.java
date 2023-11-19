@@ -7,11 +7,11 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 
-public class BotTest {
+public class BotTest{
 
     private long ChatId;
     private MessageHandling bot;
@@ -365,30 +365,39 @@ public class BotTest {
     }
 
     /**
-     * Проверка для ответа пользователя на загадку
+     * Тест проверяет, что метод checkAnswer возвращает верный ответ,
+     * когда пользователь вводит правильный ответ на текущую загадку.
      */
     @Test
-    public void answerInPuzzleModeTest() {
-        // Создаем загадку
-        String question = "Вопрос по загадке";
-        String userCorrectAnswer = "Правильный ответ";
-        String userWrongAnswer = "Неправильный ответ";
-
-        PuzzleGame puzzleGame = mock(PuzzleGame.class);
-        when(puzzleGame.checkAnswer(anyLong(), eq(userCorrectAnswer)))
-                .thenReturn("Верно! Следующая загадка: " + question);
-        when(puzzleGame.checkAnswer(anyLong(), eq(userWrongAnswer)))
-                .thenReturn("Неверно. Попробуйте еще раз.");
-
-        MessageHandling messageHandling = new MessageHandling();
-        messageHandling.setPuzzleGame(puzzleGame);
-        messageHandling.parseMessage("/playpuzzle", ChatId);
-        // Проверяем правильный ответ
-        String correctResponse = messageHandling.parseMessage(userCorrectAnswer, ChatId);
-        Assert.assertEquals("Верно! Следующая загадка: " + question, correctResponse);
-        // Проверяем неправильный ответ
-        String wrongResponse = messageHandling.parseMessage(userWrongAnswer, ChatId);
-        Assert.assertEquals("Неверно. Попробуйте еще раз.", wrongResponse);
+    public void testCheckAnswerCorrect() {
+        PuzzleGame game = new PuzzleGame();
+        game.startPuzzle(ChatId);
+        String result = game.checkAnswer(ChatId, game.currentPuzzle.getAnswer());
+        Assert.assertEquals("Верно! Следующая загадка: " + game.currentPuzzle.getQuestion(), result);
     }
+
+    /**
+     * Тест проверяет, что метод checkAnswer возвращает правильный ответ,
+     * когда пользователь вводит неправильный ответ на текущую загадку.
+     */
+    @Test
+    public void testCheckAnswerIncorrect() {
+        PuzzleGame game = new PuzzleGame();
+        game.startPuzzle(ChatId);
+        String result = game.checkAnswer(ChatId, "wrong answer");
+        Assert.assertEquals("Неверно! Попробуйте еще раз.", result);
+    }
+
+    /**
+     * Тест проверяет, что метод checkAnswer возвращает сообщение об ошибке,
+     * если нет текущей загадки.
+     */
+    @Test
+    public void testCheckAnswerNoCurrentPuzzle() {
+        PuzzleGame game = new PuzzleGame();
+        String result = game.checkAnswer(ChatId, "any");
+        Assert.assertEquals("Нет текущей загадки.", result);
+    }
+
 
 }
