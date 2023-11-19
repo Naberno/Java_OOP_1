@@ -125,7 +125,7 @@ public class PuzzleGame implements PuzzleGameInterface {
     /**
      * Текущая загадка, которую должен угадать пользователь
      */
-    private Puzzle currentPuzzle;
+    protected Puzzle currentPuzzle;
 
 
     /**
