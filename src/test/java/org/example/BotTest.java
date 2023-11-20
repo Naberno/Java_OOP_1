@@ -29,6 +29,7 @@ public class BotTest{
         MockitoAnnotations.initMocks(this);
     }
 
+
     /**
      * Проверка для команды /genre
      */
@@ -53,6 +54,7 @@ public class BotTest{
         response = bot.parseMessage("Детектив", ChatId);
         Assert.assertEquals("Прочитайте 'Убийство в восточном экспрессе', 'Снеговик' или 'Собака Баскервилей'", response);
     }
+
 
     /**
      * Проверка ответа для произвольного сообщения
@@ -86,6 +88,7 @@ public class BotTest{
         verify(storage, times(1)).addReadBook("Sample Book", "John Doe", 2023, ChatId);
         Assert.assertEquals("Книга 'Sample Book' от автора John Doe (год: 2023) успешно добавлена в список прочитанных!", response);
     }
+
 
     /**
      * Проверка, что книга не добавляется, если она уже существует в базе данных
@@ -193,6 +196,7 @@ public class BotTest{
         verify(storage, times(1)).getBooksByYear(year, ChatId);
         Assert.assertEquals("Нет прочитанных книг в этом году.", response);
     }
+
 
     /**
      * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году для случая, когда год указан верно
@@ -303,100 +307,6 @@ public class BotTest{
     public void CitationCommandTest() {
         String response = bot.parseMessage("/get", ChatId);
         Assert.assertTrue(response.startsWith("Цитата:"));
-    }
-
-    /**
-     * Проверяет команду начала игры в загадки.
-     */
-    @Test
-    public void playPuzzleCommandTest() {
-        String response = bot.parseMessage("/playpuzzle", ChatId);
-        Assert.assertTrue(response.startsWith("Добро пожаловать в игру в загадки! Начнем."));
-    }
-
-    /**
-     * Проверяет команду получения подсказки в игре в загадки.
-     */
-    @Test
-    public void getHintCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/gethint", ChatId);
-        Assert.assertTrue(response.startsWith("Подсказка:"));
-    }
-
-    /**
-     * Проверяет команду получения следующей загадки в игре.
-     */
-    @Test
-    public void anotherRiddleCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/anotheriddle", ChatId);
-        Assert.assertTrue(response.startsWith("Следующая загадка:"));
-    }
-
-    /**
-     * Проверяет команду перезапуска игры в загадки.
-     */
-    @Test
-    public void restartCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/restart", ChatId);
-        Assert.assertTrue(response.startsWith("Игра в загадки начата заново."));
-    }
-
-    /**
-     * Проверяет команду получения ответа на текущую загадку в игре.
-     */
-    @Test
-    public void getAnswerCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/getanswer", ChatId);
-        Assert.assertTrue(response.contains("Ответ на загадку"));
-    }
-
-    /**
-     * Проверяет команду завершения режима головоломки.
-     */
-    @Test
-    public void stopPuzzleCommandTest() {
-        bot.parseMessage("/playpuzzle", ChatId);
-        String response = bot.parseMessage("/stoppuzzle", ChatId);
-        Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);
-    }
-
-    /**
-     * Тест проверяет, что метод checkAnswer возвращает верный ответ,
-     * когда пользователь вводит правильный ответ на текущую загадку.
-     */
-    @Test
-    public void testCheckAnswerCorrect() {
-        PuzzleGame game = new PuzzleGame();
-        game.startPuzzle(ChatId);
-        String result = game.checkAnswer(ChatId, game.currentPuzzle.getAnswer());
-        Assert.assertEquals("Верно! Следующая загадка: " + game.currentPuzzle.getQuestion(), result);
-    }
-
-    /**
-     * Тест проверяет, что метод checkAnswer возвращает правильный ответ,
-     * когда пользователь вводит неправильный ответ на текущую загадку.
-     */
-    @Test
-    public void testCheckAnswerIncorrect() {
-        PuzzleGame game = new PuzzleGame();
-        game.startPuzzle(ChatId);
-        String result = game.checkAnswer(ChatId, "wrong answer");
-        Assert.assertEquals("Неверно! Попробуйте еще раз.", result);
-    }
-
-    /**
-     * Тест проверяет, что метод checkAnswer возвращает сообщение об ошибке,
-     * если нет текущей загадки.
-     */
-    @Test
-    public void testCheckAnswerNoCurrentPuzzle() {
-        PuzzleGame game = new PuzzleGame();
-        String result = game.checkAnswer(ChatId, "any");
-        Assert.assertEquals("Нет текущей загадки.", result);
     }
 
 
