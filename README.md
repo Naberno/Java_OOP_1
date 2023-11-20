@@ -1,7 +1,7 @@
 # Java_OOP
 <h1 align="center">Привет, это наш общий репозиторий</a> 
 <img src="https://github.com/blackcater/blackcater/raw/main/images/Hi.gif" height="32"/></h1>
-<h3 align="center">Алексей Перевощиков и Владимир Бурусов из группы КН-201</h3>
+<h3 align="center">Алексей Перевощиков и Булыгин Никита из группы КН-201</h3>
 
 <a><img src="https://readme-typing-svg.demolab.com?font=Sometype+Mono&pause=1000&center=true&random=false&width=435&lines=%D0%98%D0%B4%D0%B5%D1%82+%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0++%E2%80%A2+%E2%80%A2+%E2%80%A2" alt="Typing SVG" /></a>
 
