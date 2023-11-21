@@ -94,10 +94,8 @@ public class PuzzleTest {
         bot.parseMessage("/playpuzzle", ChatId);
         // Устанавливаем текущую головоломку
         game.currentPuzzle = new Puzzle("вопрос", "правильный ответ", "");
-
         String response = game.checkAnswer(ChatId, "правильный ответ");
-
-            Assert.assertTrue(response.startsWith("Верно! Следующая загадка: "));
+        Assert.assertTrue(response.startsWith("Верно! Следующая загадка: "));
     }
 
 
