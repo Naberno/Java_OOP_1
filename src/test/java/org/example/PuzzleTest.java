@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestPuzzle {
+public class PuzzleTest {
 
     private PuzzleGame game;
 
@@ -87,7 +87,7 @@ public class TestPuzzle {
 
 
     /**
-     Тест проверяет правильный ответ на головоломку
+     *  Тест проверяет правильный ответ на головоломку
      */
     @Test
     public void testCorrectAnswer() {
@@ -102,7 +102,7 @@ public class TestPuzzle {
 
 
     /**
-     Тест проверяет неправильный ответ на головоломку
+     *  Тест проверяет неправильный ответ на головоломку
      */
     @Test
     public void testIncorrectAnswer() {
@@ -114,7 +114,7 @@ public class TestPuzzle {
 
 
     /**
-     Тест проверяет ответ без текущей головоломки
+     *  Тест проверяет ответ без текущей головоломки
      */
     @Test
     public void testNoCurrentPuzzle() {
