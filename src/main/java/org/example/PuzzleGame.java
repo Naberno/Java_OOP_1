@@ -1,10 +1,30 @@
 package org.example;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+/**
+ *  Интерфейс головоломки, который определяет методы
+ *  для получения вопроса и ответа объекта головоломки.
+ */
+interface PuzzleInterface{
+    /**
+     *  Возвращает правильный ответ на головоломку.
+     *  @return ответ на головоломку
+     */
+    String getAnswer();
+
+    /**
+     *  Возвращает вопрос текущей головоломки.
+     *  @return вопрос головоломки
+     */
+    String getQuestion();
+
+    /**
+     * Метод возвращает подсказку для головоломки.
+     * @return Подсказка для головоломки.
+     */
+    String getHint();
+}
 
 /**
  * Интерфейс для игры в загадки.
@@ -71,7 +91,7 @@ interface PuzzleGameInterface {
 /**
  * Класс представляет собой объект головоломки.
  */
-class Puzzle {
+class Puzzle implements PuzzleInterface{
     private String question;
     private String answer;
     private String hint;
