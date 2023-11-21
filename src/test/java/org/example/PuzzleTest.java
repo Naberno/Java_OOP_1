@@ -82,7 +82,11 @@ public class PuzzleTest {
     public void stopPuzzleCommandTest() {
         bot.parseMessage("/playpuzzle", ChatId);
         String response = bot.parseMessage("/stoppuzzle", ChatId);
-        Assert.assertEquals("Режим головоломки завершен.\nПравильных ответов: 0\n" + "Неправильных ответов: 20\n" + "Процент правильных ответов: 0.0%", response);
+        Assert.assertEquals("""
+                Режим головоломки завершен.
+                Правильных ответов: 0
+                Неправильных ответов: 20
+                Процент правильных ответов: 0.0%""", response);
     }
 
 
