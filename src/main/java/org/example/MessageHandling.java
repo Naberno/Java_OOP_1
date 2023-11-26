@@ -127,15 +127,17 @@ public class MessageHandling implements MessageProcessor {
         if (textMsg.equals("/start") || textMsg.equals("Привет")) {
             response = "Привет, я игровой бот. Жми /help, чтобы узнать что я могу.";
         } else if (textMsg.equals("/help") || textMsg.equals("Помощь")){
-            response = "Привет, я умею:\n" +
-                    "/chat - Включать чат-бота для помощи в разных вопросах\n" +
-                    "/addgame - Добавить игру, которую ты уже прошел\n" +
-                    "/getplayed - Список пройденных игр\n" +
-                    "/removegame - Удалить игру из списка\n" +
-                    "/editgame - Изменяет выбранную игру из списка на написанную\n" +
-                    "/getbyauthor - Получить список игр по конкретному автору\n" +
-                    "/getbyyear - Получить список игр по конкретному году\n" +
-                    "/playpuzzle - Быстрый квиз по разным темам для развлечения\n"
+            response = """
+                    Привет, я умею:
+                    /chat - Включать чат-бота для помощи в разных вопросах
+                    /addgame - Добавить игру, которую ты уже прошел
+                    /getplayed - Список пройденных игр
+                    /removegame - Удалить игру из списка
+                    /editgame - Изменяет выбранную игру из списка на написанную
+                    /getbyauthor - Получить список игр по конкретному автору
+                    /getbyyear - Получить список игр по конкретному году
+                    /playpuzzle - Быстрый квиз по разным темам для развлечения
+                    """
             ;
         }else if (textMsg.equals("/get") || textMsg.equals("Просвети")) {
             response = storage.getRandQuote();
@@ -230,22 +232,31 @@ public class MessageHandling implements MessageProcessor {
 
 
         } else if (textMsg.startsWith("/getbyauthor")) {
-            String author = textMsg.substring(13); // Получаем имя автора из сообщения
-            ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
-            if (!gamesByAuthor.isEmpty()) {
-                response = "Игры издателя " + author + ":\n" + String.join("\n", gamesByAuthor);
+            if (textMsg.length() > 12) {
+                String author = textMsg.substring(13); // Получаем имя автора из сообщения
+                ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
+                if (!gamesByAuthor.isEmpty()) {
+                    response = "Игры издателя " + author + ":\n" + String.join("\n", gamesByAuthor);
+                } else {
+                    response = "Нет пройденных игр этого издателя.";
+                }
             } else {
-                response = "Нет пройденных игр этого издателя.";
+                response = "Введите параметр после /getbyauthor";
             }
 
 
+
         } else if (textMsg.startsWith("/getbyyear")) {
-            int year = Integer.parseInt(textMsg.substring(11)); // Получаем год из сообщения
-            ArrayList<String> getGamesByYear = storage.getGamesByYear(year, chatId);
-            if (!getGamesByYear.isEmpty()) {
-                response = "Игры" + " " + year + " " + "года" + ":\n" + String.join("\n", getGamesByYear);
+            if (textMsg.length() > 10) {
+                int year = Integer.parseInt(textMsg.substring(11)); // Получаем год из сообщения
+                ArrayList<String> getGamesByYear = storage.getGamesByYear(year, chatId);
+                if (!getGamesByYear.isEmpty()) {
+                    response = "Игры" + " " + year + " " + "года" + ":\n" + String.join("\n", getGamesByYear);
+                } else {
+                    response = "Нет пройденных игр в этого года.";
+                }
             } else {
-                response = "Нет пройденных игр в этого года.";
+                response = "Введите параметр после /getbyyear";
             }
 
 
