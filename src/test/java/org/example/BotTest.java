@@ -1,16 +1,17 @@
 package org.example;
 
+import org.junit.Test;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.*;
-
 import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class BotTest{
 
     private long ChatId;
@@ -26,7 +27,6 @@ public class BotTest{
     public void setUp() {
         ChatId = 12345L;
         bot = new MessageHandling();
-        MockitoAnnotations.initMocks(this);
     }
 
 
