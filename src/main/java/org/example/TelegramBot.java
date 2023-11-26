@@ -42,7 +42,7 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
      * Имя Telegram-бота.
      * Эта переменная используется для хранения имени бота.
      */
-    final private String BOT_NAME = "groobee";
+    final private String BOT_NAME = "Nabo";
 
     /**
      * Экземпляр класса MessageHandling.

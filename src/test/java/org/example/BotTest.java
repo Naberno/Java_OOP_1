@@ -31,76 +31,50 @@ public class BotTest{
 
 
     /**
-     * Проверка для команды /genre
-     */
-    @Test
-    public void GenreCommandTest() {
-        String response = bot.parseMessage("/genre", ChatId);
-        Assert.assertEquals("Здравствуйте, добро пожаловать в бот рекомендации книг! Нажмите /chat и выберите жанр", response);
-
-         // Проверка для жанра "Научная фантастика"
-        response = bot.parseMessage("Научная фантастика", ChatId);
-        Assert.assertEquals("Прочитайте 'Автостопом по галактике', 'Время жить и время умирать' или 'Война миров'", response);
-
-        //Проверка для жанра "Фэнтези"
-        response = bot.parseMessage("Фэнтези", ChatId);
-        Assert.assertEquals("Прочитайте 'Хоббит', 'Игра престолов' или 'Гарри Поттер'", response);
-
-        // Проверка для жанра "Романтика"
-        response = bot.parseMessage("Романтика", ChatId);
-        Assert.assertEquals("Прочитайте 'Великий Гетсби', 'Триумфальная арка' или 'Поющие в терновнике'", response);
-
-        // Проверка для жанра "Детектив"
-        response = bot.parseMessage("Детектив", ChatId);
-        Assert.assertEquals("Прочитайте 'Убийство в восточном экспрессе', 'Снеговик' или 'Собака Баскервилей'", response);
-    }
-
-
-    /**
      * Проверка ответа для произвольного сообщения
      */
     @Test
     public void AnyMessageTest() {
         String response = bot.parseMessage("Привет", ChatId);
-        Assert.assertEquals("Привет", response);
+        Assert.assertEquals("Привет, я игровой бот. Жми /help, чтобы узнать что я могу.", response);
     }
 
 
     /**
-     * Проверка команды /clearread для полной очистки списка прочитанных книг
+     * Проверка команды /clearplayed для полной очистки списка пройденных игр
      */
     @Test
-    public void testClearReadBooksCommand() {
-        String response = messageHandling.parseMessage("/clearread", ChatId);
-        verify(storage, times(1)).clearReadBooks(ChatId);
-        Assert.assertEquals("Список прочитанных книг очищен!", response);
+    public void testClearPlayedGamesCommand() {
+        String response = messageHandling.parseMessage("/clearplayed", ChatId);
+        verify(storage, times(1)).clearPlayedGames(ChatId);
+        Assert.assertEquals("Список пройденных игр очищен!", response);
     }
 
 
     /**
-     * Проверка добавления книги в базу данных при корректном вводе
+     * Проверка добавления игры в базу данных при корректном вводе
      */
     @Test
-    public void testAddBookCommandWithValidInput() {
-        String textMsg = "/addbook\nSample Book\nJohn Doe\n2023";
-        when(storage.bookExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(false);
+    public void testAddGameCommandWithValidInput() {
+        String textMsg = "/addgame\nSample Game\nJohn Doe\n2023";
+        when(storage.gameExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(false);
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, times(1)).addReadBook("Sample Book", "John Doe", 2023, ChatId);
-        Assert.assertEquals("Книга 'Sample Book' от автора John Doe (год: 2023) успешно добавлена в список прочитанных!", response);
+        verify(storage, times(1)).addPlayedGame("Sample Game", "John Doe", 2023, ChatId);
+        Assert.assertEquals("Игра 'Sample Game' от издателя John Doe (2023) успешно добавлена в список пройденных!", response);
     }
 
 
     /**
-     * Проверка, что книга не добавляется, если она уже существует в базе данных
+     * Проверка, что игра не добавляется, если она уже существует в базе данных
      */
     @Test
-    public void testAddBookCommandWithExistingBook() {
-        String textMsg = "/addbook\nSample Book\nJohn Doe\n2023";
-        when(storage.bookExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(true);
+    public void testAddGameCommandWithExistingGame() {
+        String textMsg = "/addgame\nSample Game\nJohn Doe\n2023";
+        when(storage.gameExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(true);
         messageHandling.parseMessage(textMsg, ChatId);
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
-        Assert.assertEquals("Книга с указанным названием, автором и годом прочтения уже существует в базе данных.", response);
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Игра с указанным названием, автором и годом выхода уже существует в базе данных.", response);
     }
 
 
@@ -108,11 +82,11 @@ public class BotTest{
      * Проверка случая, когда год вводится в неверном формате
      */
     @Test
-    public void testAddBookCommandWithInvalidYear() {
-        String textMsg = "/addbook\nSample Book\nJohn Doe\nInvalidYear";
+    public void testAddGameCommandWithInvalidYear() {
+        String textMsg = "/addgame\nSample Game\nJohn Doe\nInvalidYear";
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
-        Assert.assertEquals("Некорректный формат года прочтения.", response);
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Некорректный формат года выхода.", response);
     }
 
 
@@ -120,183 +94,192 @@ public class BotTest{
      * Проверка случая, когда ввод неполный
      */
     @Test
-    public void testAddBookCommandWithIncompleteInput() {
-        String textMsg = "/addbook\nSample Book\nJohn Doe";
+    public void testAddGameCommandWithIncompleteInput() {
+        String textMsg = "/addgame\nSample Game\nJohn Doe";
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addReadBook(anyString(), anyString(), anyInt(), anyLong());
-        Assert.assertEquals("Некорректный формат ввода. Используйте /addbook Название книги\nАвтор\nГод прочтения", response);
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
+        Assert.assertEquals("Некорректный формат ввода. Используйте:\n/addgame Название_игры\nИздатель\nГод_выхода", response);
     }
 
 
     /**
-     * Проверка команды /getread для вывода полного списка прочитанных книг при пустом списке
+     * Проверка команды /getplayed для вывода полного списка пройденных игр при пустом списке
      */
     @Test
-    public void testGetReadBooksCommandWithEmptyList() {
+    public void testGetPlayedGamesCommandWithEmptyList() {
         ArrayList<String> emptyList = new ArrayList<>();
-        when(storage.getReadBooks(ChatId)).thenReturn(emptyList);
-        String response = messageHandling.parseMessage("/getread", ChatId);
-        verify(storage, times(1)).getReadBooks(ChatId);
-        Assert.assertEquals("Список прочитанных книг пуст.", response);
+        when(storage.getPlayedGames(ChatId)).thenReturn(emptyList);
+        String response = messageHandling.parseMessage("/getplayed", ChatId);
+        verify(storage, times(1)).getPlayedGames(ChatId);
+        Assert.assertEquals("Список пройденных игр пуст.", response);
     }
 
 
     /**
-     * Проверка команды /getread для вывода полного списка прочитанных книг при заполненном списке
+     * Проверка команды /getplayed для вывода полного списка пройденных игр при заполненном списке
      */
     @Test
-    public void testGetReadBooksCommandWithNonEmptyList() {
+    public void testGetPlayedGamesCommandWithNonEmptyList() {
+        // Замените ChatId на фактическое значение, которое вы ожидаете передать
+        long chatId = 12345L;
+
         ArrayList<String> nonEmptyList = new ArrayList<>();
-        nonEmptyList.add("Book 1");
-        nonEmptyList.add("Book 2");
-        when(storage.getReadBooks(ChatId)).thenReturn(nonEmptyList);
-        String response = messageHandling.parseMessage("/getread", ChatId);
-        verify(storage, times(1)).getReadBooks(ChatId);
-        Assert.assertEquals("Прочитанные книги:\n1. Book 1\n2. Book 2\n", response);
+        nonEmptyList.add("Game 1");
+        nonEmptyList.add("Game 2");
+
+        // Замените ChatId на chatId
+        when(storage.getPlayedGames(chatId)).thenReturn(nonEmptyList);
+
+        // Замените ChatId на chatId
+        String response = messageHandling.parseMessage("/getplayed", chatId);
+
+        // Замените ChatId на chatId
+        verify(storage, times(1)).getPlayedGames(chatId);
+        Assert.assertEquals("Пройденные игры:\n1. Game 1\n2. Game 2\n", response);
     }
 
 
     /**
-     * Проверка команды /getbyauthor для получения списка прочитанных книг указанного автора для случая, когда автор указан верно
+     * Проверка команды /getbyauthor для получения списка пройденных игр указанного автора для случая, когда автор указан верно
      */
     @Test
-    public void testGetBooksByAuthorCommandWithExistingBooks() {
+    public void testGetGamesByAuthorCommandWithExistingGames() {
         String author = "John Doe";
-        ArrayList<String> books = new ArrayList<>();
-        books.add("Book 1");
-        books.add("Book 2");
-        when(storage.getBooksByAuthor(author, ChatId)).thenReturn(books);
+        ArrayList<String> games = new ArrayList<>();
+        games.add("Game 1");
+        games.add("Game 2");
+        when(storage.getGamesByAuthor(author, ChatId)).thenReturn(games);
         String response = messageHandling.parseMessage("/getbyauthor " + author, ChatId);
-        verify(storage, times(1)).getBooksByAuthor(author, ChatId);
-        Assert.assertEquals("Книги автора John Doe:\nBook 1\nBook 2", response);
+        verify(storage, times(1)).getGamesByAuthor(author, ChatId);
+        Assert.assertEquals("Игры издателя John Doe:\nGame 1\nGame 2", response);
     }
 
 
     /**
-     * Проверка команды /getbyauthor для получения списка прочитанных книг указанного автора для случая, когда авор указан неверно
+     * Проверка команды /getbyauthor для получения списка пройденных игр указанного автора для случая, когда авор указан неверно
      */
     @Test
-    public void testGetBooksByAuthorCommandWithNoBooks() {
+    public void testGetGamesByAuthorCommandWithNoGames() {
         String author = "Nonexistent Author";
-        when(storage.getBooksByAuthor(author, ChatId)).thenReturn(new ArrayList<>());
+        when(storage.getGamesByAuthor(author, ChatId)).thenReturn(new ArrayList<>());
         String response = messageHandling.parseMessage("/getbyauthor " + author, ChatId);
-        verify(storage, times(1)).getBooksByAuthor(author, ChatId);
-        Assert.assertEquals("Нет прочитанных книг этого автора.", response);
+        verify(storage, times(1)).getGamesByAuthor(author, ChatId);
+        Assert.assertEquals("Нет пройденных игр этого издателя.", response);
     }
 
 
     /**
-     * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году для случая, когда год указан неверно
+     * Проверка команды /getbyyear для получения списка пройденных игр в указанном году для случая, когда год указан неверно
      */
     @Test
-    public void testGetBooksByYearCommandWithNoBooks() {
+    public void testGetGamesByYearCommandWithNoGames() {
         int year = 1112;
-        when(storage.getBooksByYear(year, ChatId)).thenReturn(new ArrayList<>());
+        when(storage.getGamesByYear(year, ChatId)).thenReturn(new ArrayList<>());
         String response = messageHandling.parseMessage("/getbyyear " + year, ChatId);
-        verify(storage, times(1)).getBooksByYear(year, ChatId);
-        Assert.assertEquals("Нет прочитанных книг в этом году.", response);
+        verify(storage, times(1)).getGamesByYear(year, ChatId);
+        Assert.assertEquals("Нет пройденных игр в этого года.", response);
     }
 
 
     /**
-     * Проверка команды /getbyyear для получения списка прочитанных книг в указанном году для случая, когда год указан верно
+     * Проверка команды /getbyyear для получения списка пройденных игр в указанном году для случая, когда год указан верно
      */
     @Test
-    public void testGetBooksByYearCommandWithExistingBooks() {
+    public void testGetGamesByYearCommandWithExistingGames() {
         int year = 2020;
-        ArrayList<String> books = new ArrayList<>();
-        books.add("Book 1");
-        books.add("Book 2");
-        when(storage.getBooksByYear(year, ChatId)).thenReturn(books);
+        ArrayList<String> games = new ArrayList<>();
+        games.add("Game 1");
+        games.add("Game 2");
+        when(storage.getGamesByYear(year, ChatId)).thenReturn(games);
         String response = messageHandling.parseMessage("/getbyyear " + year, ChatId);
-        verify(storage, times(1)).getBooksByYear(year, ChatId);
-        Assert.assertEquals("Книги 2020 года:\nBook 1\nBook 2", response);
+        verify(storage, times(1)).getGamesByYear(year, ChatId);
+        Assert.assertEquals("Игры 2020 года:\nGame 1\nGame 2", response);
     }
 
 
     /**
-     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда номер книги в списке указан верно
+     * Проверка команды /removegame для удаления указанной игры из списка пройденных игр для случая, когда номер игры в списке указан верно
      */
     @Test
-    public void testRemoveBookCommandWithValidBookNumber() {
+    public void testRemoveGameCommandWithValidGameNumber() {
         String message = "1";
-        ArrayList<String> readBooks = new ArrayList<>();
-        readBooks.add("Book 1");
-        readBooks.add("Book 2");
-        when(storage.getReadBooks(ChatId)).thenReturn(readBooks);
-        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
-        verify(storage, times(1)).updateReadBooks(eq(ChatId), any(ArrayList.class));
-        Assert.assertEquals("Книга Book 1 успешно удалена из списка прочитанных!", response);
+        ArrayList<String> playedGames = new ArrayList<>();
+        playedGames.add("Game 1");
+        playedGames.add("Game 2");
+        when(storage.getPlayedGames(ChatId)).thenReturn(playedGames);
+        String response = messageHandling.parseMessage("/removegame " + message, ChatId);
+        verify(storage, times(1)).updatePlayedGames(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Игра Game 1 успешно удалена из списка пройденных!", response);
     }
 
 
     /**
-     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда номер книги в списке указан неверно
+     * Проверка команды /removegame для удаления указанной игры из списка пройденных игр для случая, когда номер игры в списке указан неверно
      */
     @Test
-    public void testRemoveBookCommandWithInvalidBookNumber() {
+    public void testRemoveGameCommandWithInvalidGameNumber() {
         String message = "3";
-        ArrayList<String> readBooks = new ArrayList<>();
-        readBooks.add("Book 1");
-        readBooks.add("Book 2");
-        when(storage.getReadBooks(ChatId)).thenReturn(readBooks);
-        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
-        verify(storage, never()).updateReadBooks(eq(ChatId), any(ArrayList.class));
-        Assert.assertEquals("Указанный номер книги не существует.", response);
+        ArrayList<String> playedGames = new ArrayList<>();
+        playedGames.add("Game 1");
+        playedGames.add("Game 2");
+        when(storage.getPlayedGames(ChatId)).thenReturn(playedGames);
+        String response = messageHandling.parseMessage("/removegame " + message, ChatId);
+        verify(storage, never()).updatePlayedGames(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Указанный номер игры не существует.", response);
     }
 
 
     /**
-     * Проверка команды /removebook для удаления указанной книги из списка прочитанных книг для случая, когда указано не число
+     * Проверка команды /removegame для удаления указанной игры из списка пройденных игр для случая, когда указано не число
      */
     @Test
-    public void testRemoveBookCommandWithInvalidFormat() {
+    public void testRemoveGameCommandWithInvalidFormat() {
         String message = "InvalidNumber";
-        String response = messageHandling.parseMessage("/removebook " + message, ChatId);
-        verify(storage, never()).updateReadBooks(eq(ChatId), any(ArrayList.class));
-        Assert.assertEquals("Некорректный формат номера книги", response);
+        String response = messageHandling.parseMessage("/removegame " + message, ChatId);
+        verify(storage, never()).updatePlayedGames(eq(ChatId), any(ArrayList.class));
+        Assert.assertEquals("Некорректный формат номера игры", response);
     }
 
 
     /**
-     * Проверка команды /editbook для случая, когда выполняется успешное редактирование книги с правильными данными
+     * Проверка команды /editgame для случая, когда выполняется успешное редактирование игры с правильными данными
      */
     @Test
-    public void testEditBookCommandWithValidData() {
-        String message = "1\nNew Book\nNew Author\n2023";
-        ArrayList<String> readBooks = new ArrayList<>();
-        readBooks.add("Old Book\nOld Author\n2022");
-        when(storage.getAllValues(ChatId)).thenReturn(readBooks);
-        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
-        verify(storage, times(1)).editReadBook(eq("Old Book"), eq("Old Author"), eq(2022), eq("New Book"), eq("New Author"), eq(2023), eq(ChatId));
-        Assert.assertEquals("Книга 'Old Book' успешно заменена на книгу 'New Book' от автора New Author (год: 2023) в списке прочитанных!", response);
+    public void testEditGameCommandWithValidData() {
+        String message = "1\nNew Game\nNew Author\n2023";
+        ArrayList<String> playedGames = new ArrayList<>();
+        playedGames.add("Old Game\nOld Author\n2022");
+        when(storage.getAllValues(ChatId)).thenReturn(playedGames);
+        String response = messageHandling.parseMessage("/editgame " + message, ChatId);
+        verify(storage, times(1)).editPlayedGame(eq("Old Game"), eq("Old Author"), eq(2022), eq("New Game"), eq("New Author"), eq(2023), eq(ChatId));
+        Assert.assertEquals("Игра 'Old Game' успешно заменена на игру 'New Game' от издателя New Author (2023) в списке пройденных!", response);
     }
 
 
     /**
-     * Проверка команды /editbook для случая, когда указанный номер книги недопустим (например, больше размера списка)
+     * Проверка команды /editgame для случая, когда указанный номер игры недопустим (например, больше размера списка)
      */
     @Test
-    public void testEditBookCommandWithInvalidBookNumber() {
-        String message = "3\nNew Book\nNew Author\n2023";
-        ArrayList<String> readBooks = new ArrayList<>();
-        readBooks.add("Old Book\nOld Author\n2022");
-        when(storage.getAllValues(ChatId)).thenReturn(readBooks);
-        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
-        verify(storage, never()).editReadBook(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
-        Assert.assertEquals("Указанный уникальный номер книги не существует в списке прочитанных книг.", response);
+    public void testEditGameCommandWithInvalidGameNumber() {
+        String message = "3\nNew Game\nNew Author\n2023";
+        ArrayList<String> playedGames = new ArrayList<>();
+        playedGames.add("Old Game\nOld Author\n2022");
+        when(storage.getAllValues(ChatId)).thenReturn(playedGames);
+        String response = messageHandling.parseMessage("/editgame " + message, ChatId);
+        verify(storage, never()).editPlayedGame(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
+        Assert.assertEquals("Указанный уникальный номер игры не существует в списке пройденных игр.", response);
     }
 
 
     /**
-     * Проверка команды /editbook для случая, когда данные книги введены в неверном формате.
+     * Проверка команды /editgame для случая, когда данные игры введены в неверном формате.
      */
     @Test
-    public void testEditBookCommandWithInvalidDataFormat() {
+    public void testEditGameCommandWithInvalidDataFormat() {
         String message = "InvalidData";
-        String response = messageHandling.parseMessage("/editbook " + message, ChatId);
-        verify(storage, never()).editReadBook(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
-        Assert.assertEquals("Некорректный формат ввода. Используйте /editbook Уникальный_номер\n Новое_название\nНовый_автор\nНовый_год", response);
+        String response = messageHandling.parseMessage("/editgame " + message, ChatId);
+        verify(storage, never()).editPlayedGame(anyString(), anyString(), anyInt(), anyString(), anyString(), anyInt(), eq(ChatId));
+        Assert.assertEquals("Некорректный формат ввода. Используйте:\n/editgame Номер_в_списке\nНовое_название\nНовый_издатель\nНовый_год", response);
     }
 
 
