@@ -21,9 +21,10 @@ interface GameStorage {
      * @param title  название игры
      * @param author автор игры
      * @param year   год прочтения
+     * @param rating рейтинг игры
      * @param chatId уникальный идентификатор чата пользователя
      */
-    void addPlayedGame(String title, String author, int year, long chatId);
+    void addPlayedGame(String title, String author, int year, int rating, long chatId);
 
     /**
      * Удаляет все пройденные игры для указанного чата.
@@ -151,19 +152,20 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для добавления игры в список пройденных игр по формату: название /n автор /n год
      */
-    public void addPlayedGame(String title, String author, int year, long chatId) {
+    public void addPlayedGame(String title, String author, int year, int rating, long chatId) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Создаем запрос на добавление игры в базу данных с указанием названия, автора и года прочтения
-            String sql = "INSERT INTO completed_games (title, author, year, chat_id) VALUES (?, ?, ?, ?)";
+            // Создаем запрос на добавление игры в базу данных с указанием названия, автора, года прочтения и рейтинга
+            String sql = "INSERT INTO completed_games (title, author, year, chat_id, rating) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, title);
             statement.setString(2, author);
             statement.setInt(3, year);
             statement.setLong(4, chatId);
+            statement.setInt(5, rating);
             statement.executeUpdate();
             statement.close();
         } catch (Exception e) {
@@ -468,5 +470,6 @@ class Storage implements GameStorage, QuoteStorage {
         }
         return allValues;
     }
+
 
 }
