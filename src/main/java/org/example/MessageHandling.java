@@ -1,7 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
-//import java.io.IOException;
+import java.io.IOException;
 
 /**
  * Интерфейс для обработки сообщений пользователя
@@ -26,9 +26,9 @@ public class MessageHandling implements MessageProcessor {
 
     private Storage storage;
     private PuzzleGame puzzleGame;
-   // private final ChatGpt chatGpt;
+    private Gpt3Chat chatGpt;
     private boolean puzzleMode;
-    //private boolean chatMode;
+    private boolean chatMode;
 
 
     /**
@@ -38,14 +38,11 @@ public class MessageHandling implements MessageProcessor {
     public MessageHandling() {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
-        //chatGpt = new ChatGpt();
+        chatGpt = new Gpt3Chat();
         puzzleMode = false;
-        //chatMode = false;
+        chatMode = false;
     }
 
-//    public void setChatMode(boolean chatMode) {
-//        ChatGpt.setChatMode(chatMode);
-//    }
 
     /**
      * Метод для обработки входящего текстового сообщения от пользователя.
@@ -60,8 +57,8 @@ public class MessageHandling implements MessageProcessor {
         
         if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
-//        } else if (chatMode) {
-//            response = handleChatMode(textMsg, chatId);
+        } else if (chatMode) {
+            response = handleChatMode(textMsg, chatId);
         } else{
             response = handleDefaultMode(textMsg, chatId);
         }
@@ -102,17 +99,20 @@ public class MessageHandling implements MessageProcessor {
         return response;
     }
 
-//    private String handleChatMode(String textMsg, long chatId) {
-//        String response = "";
-//        if (textMsg.equals("/stopchat")) {
-//            response = "Режим чата завершен";
-//            chatMode = false; // Выход из режима чата
-//            // Устанавливаем состояние chatMode в ChatGpt
-//            ChatGpt.setChatMode(chatMode);
-//        }
-//        return response;
-//    }
-
+    private String handleChatMode(String textMsg, long chatId) {
+        String response = "";
+        if (textMsg.equals("/stopchat")) {
+            response = "Режим чата завершен";
+            chatMode = false; // Выход из режима чата
+        } else {
+            try {
+                response = chatGpt.generateResponse(textMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
 
     /**
      * Обработчик сообщений в режиме по умолчанию.
@@ -260,6 +260,20 @@ public class MessageHandling implements MessageProcessor {
             }
 
 
+        } else if (textMsg.startsWith("/getbyrating")) {
+            // Обработка команды /getbyrating
+            ArrayList<String> gamesByRating = storage.getGamesByAverageRating(chatId);
+
+            if (!gamesByRating.isEmpty()) {
+                response = "Список игр по среднему рейтингу:\n";
+                for (String game : gamesByRating) {
+                    response += game + "\n";
+                }
+            } else {
+                response = "Нет данных о среднем рейтинге игр.";
+            }
+
+
         } else if (textMsg.startsWith("/removegame")) {
             if (textMsg.length() > 11) {
                 String message = textMsg.substring(12);
@@ -283,14 +297,12 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
-        }
+
             //Вход в режим чата с ассистентом
-//        } else if (textMsg.equals("/chat")){
-//            chatMode = true;
-//            response = "";
-//        }
-
-
+        } else if (textMsg.equals("/chat")){
+            chatMode = true;
+            response = "Режим чата включен";
+        }
 
         else {
         response = textMsg;
