@@ -1,7 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
-import java.io.IOException;
+
 
 /**
  * Интерфейс для обработки сообщений пользователя
@@ -27,8 +27,15 @@ public class MessageHandling implements MessageProcessor {
     private Storage storage;
     private PuzzleGame puzzleGame;
     private Gpt3Chat chatGpt;
-    private boolean puzzleMode;
+  
+    private String lastAddedGameTitle;
+    private String lastAddedGameAuthor;
+    private int lastAddedGameYear;
+    private long lastAddedGameChatId;
     private boolean chatMode;
+    private boolean puzzleMode;
+    private boolean awaitingRating;
+  
 
 
     /**
@@ -38,7 +45,9 @@ public class MessageHandling implements MessageProcessor {
     public MessageHandling() {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
+
         chatGpt = new Gpt3Chat();
+        awaitingRating = false;
         puzzleMode = false;
         chatMode = false;
     }
@@ -54,15 +63,17 @@ public class MessageHandling implements MessageProcessor {
 
     public String parseMessage(String textMsg, long chatId) {
         String response;
-        
-        if (puzzleMode) {
+        if (awaitingRating) {
+            response = handleRating(textMsg);
+        } else if (textMsg.startsWith("/addgame")) {
+            response = handleAddGame(textMsg, chatId);
+        } else if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
         } else if (chatMode) {
             response = handleChatMode(textMsg, chatId);
         } else{
             response = handleDefaultMode(textMsg, chatId);
         }
-
         return response;
     }
 
@@ -99,6 +110,7 @@ public class MessageHandling implements MessageProcessor {
         return response;
     }
 
+
     private String handleChatMode(String textMsg, long chatId) {
         String response = "";
         if (textMsg.equals("/stopchat")) {
@@ -111,6 +123,67 @@ public class MessageHandling implements MessageProcessor {
                 e.printStackTrace();
             }
         }
+      
+
+    private String handleAddGame(String textMsg, long chatId) {
+        String response;
+
+        if (textMsg.length() > 9) {
+            String[] parts = textMsg.substring(9).split("\n");
+            if (parts.length == 3) {
+                String title = parts[0].trim();
+                String author = parts[1].trim();
+                int year;
+
+                try {
+                    year = Integer.parseInt(parts[2].trim());
+
+                    if (!storage.gameExists(title, author, year, chatId)) {
+                        lastAddedGameTitle = title;
+                        lastAddedGameAuthor = author;
+                        lastAddedGameYear = year;
+                        lastAddedGameChatId = chatId;
+                        awaitingRating = true;
+
+                        response = "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена! Оцените игру от 1 до 5:";
+                        return response;  // Возвращаем ответ, чтобы прервать дальнейшую обработку в текущем вызове
+                    } else {
+                        response = "Игра с указанным названием, издателем и годом выхода уже существует в базе данных.";
+                    }
+                } catch (NumberFormatException e) {
+                    response = "Некорректный формат года выхода.";
+                }
+            } else {
+                response = "Некорректный формат ввода. Используйте:\n/addgame Названиеигры\nИздатель\nГодвыхода";
+            }
+        } else {
+            response = "Чтобы добавить игру используйте:\n/addgame Названиеигры\nИздатель\nГодвыхода";
+        }
+
+        return response;
+    }
+
+
+    private String handleRating(String textMsg) {
+        String response;
+
+        try {
+            int rating = Integer.parseInt(textMsg.trim());
+
+            // Добавьте дополнительную проверку на допустимые значения рейтинга
+            if (rating >= 1 && rating <= 5) {
+                // Обновьте базу данных с рейтингом
+                storage.addPlayedGame(lastAddedGameTitle, lastAddedGameAuthor, lastAddedGameYear, rating, lastAddedGameChatId);
+                awaitingRating = false;
+                response = "Отзыв " + rating + "⭐ оставлен.";
+            } else {
+                response = "Пожалуйста, введите оценку от 1 до 5.";
+            }
+        } catch (NumberFormatException e) {
+            response = "Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.";
+        }
+
+
         return response;
     }
 
@@ -141,31 +214,6 @@ public class MessageHandling implements MessageProcessor {
             ;
         }else if (textMsg.equals("/get") || textMsg.equals("Просвети")) {
             response = storage.getRandQuote();
-
-        } else if (textMsg.startsWith("/addgame") ) {
-            if (textMsg.length() > 9) {
-            // Получаем название игры, автора и год выхода, введенные пользователем
-                String[] parts = textMsg.substring(9).split("\n");
-                if (parts.length == 3) {
-                    String title = parts[0].trim();
-                    String author = parts[1].trim();
-                    int year;
-                    try {
-                        year = Integer.parseInt(parts[2].trim());
-
-                        // Проверяем существование игры в базе данных
-                        if (!storage.gameExists(title, author, year, chatId)) {
-                            // Если игры с такими данными нет, добавляем книгу в базу данных
-                            storage.addPlayedGame(title, author, year, chatId);
-                            response = "Игра '" + title + "' от издателя " + author + " (" + year + ") успешно добавлена в список пройденных!";
-                        } else {
-                            response = "Игра с указанным названием, автором и годом выхода уже существует в базе данных.";
-                        }
-                    } catch (NumberFormatException e) {
-                        response = "Некорректный формат года выхода.";
-                    }
-                } else { response = "Некорректный формат ввода. Используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";}
-            } else { response = "Чтобы добавить игру используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";}
 
 
         } else if (textMsg.startsWith("/editgame")) {
@@ -297,7 +345,7 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
-
+          
             //Вход в режим чата с ассистентом
         } else if (textMsg.equals("/chat")){
             chatMode = true;

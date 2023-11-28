@@ -21,6 +21,7 @@ interface GameStorage {
      * @param title  название игры
      * @param author автор игры
      * @param year   год прочтения
+     * @param rating рейтинг игры
      * @param chatId уникальный идентификатор чата пользователя
      */
     void addPlayedGame(String title, String author, int year, int rating, long chatId);
@@ -516,5 +517,6 @@ class Storage implements GameStorage, QuoteStorage {
         }
         return allValues;
     }
+
 
 }
