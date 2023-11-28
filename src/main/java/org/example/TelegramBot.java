@@ -106,14 +106,14 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("suggest me list of books in a DETECTIVE genre");
-        row1.add("suggest me list of books in a ROMANTIC genre");
+        row1.add("1");
+        row1.add("2");
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("suggest me list of books in a FANTASY genre");
-        row2.add("suggest me list of books in a SCI-FI genre");
+        row2.add("3");
+        row2.add("4");
         KeyboardRow row3 = new KeyboardRow();
-        row3.add("/chat");
-        row3.add("/stopchat");
+        row3.add("5");
+        row3.add("!?");
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);

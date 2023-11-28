@@ -26,12 +26,17 @@ public class MessageHandling implements MessageProcessor {
 
     private Storage storage;
     private PuzzleGame puzzleGame;
+    private Gpt3Chat chatGpt;
+  
     private String lastAddedGameTitle;
     private String lastAddedGameAuthor;
     private int lastAddedGameYear;
     private long lastAddedGameChatId;
+    private boolean chatMode;
     private boolean puzzleMode;
     private boolean awaitingRating;
+  
+
 
     /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
@@ -40,9 +45,13 @@ public class MessageHandling implements MessageProcessor {
     public MessageHandling() {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
-        puzzleMode = false;
+
+        chatGpt = new Gpt3Chat();
         awaitingRating = false;
+        puzzleMode = false;
+        chatMode = false;
     }
+
 
     /**
      * Метод для обработки входящего текстового сообщения от пользователя.
@@ -60,6 +69,8 @@ public class MessageHandling implements MessageProcessor {
             response = handleAddGame(textMsg, chatId);
         } else if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
+        } else if (chatMode) {
+            response = handleChatMode(textMsg, chatId);
         } else{
             response = handleDefaultMode(textMsg, chatId);
         }
@@ -99,6 +110,20 @@ public class MessageHandling implements MessageProcessor {
         return response;
     }
 
+
+    private String handleChatMode(String textMsg, long chatId) {
+        String response = "";
+        if (textMsg.equals("/stopchat")) {
+            response = "Режим чата завершен";
+            chatMode = false; // Выход из режима чата
+        } else {
+            try {
+                response = chatGpt.generateResponse(textMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+      
 
     private String handleAddGame(String textMsg, long chatId) {
         String response;
@@ -157,6 +182,7 @@ public class MessageHandling implements MessageProcessor {
         } catch (NumberFormatException e) {
             response = "Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.";
         }
+
 
         return response;
     }
@@ -282,6 +308,20 @@ public class MessageHandling implements MessageProcessor {
             }
 
 
+        } else if (textMsg.startsWith("/getbyrating")) {
+            // Обработка команды /getbyrating
+            ArrayList<String> gamesByRating = storage.getGamesByAverageRating(chatId);
+
+            if (!gamesByRating.isEmpty()) {
+                response = "Список игр по среднему рейтингу:\n";
+                for (String game : gamesByRating) {
+                    response += game + "\n";
+                }
+            } else {
+                response = "Нет данных о среднем рейтинге игр.";
+            }
+
+
         } else if (textMsg.startsWith("/removegame")) {
             if (textMsg.length() > 11) {
                 String message = textMsg.substring(12);
@@ -305,10 +345,12 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
+          
+            //Вход в режим чата с ассистентом
+        } else if (textMsg.equals("/chat")){
+            chatMode = true;
+            response = "Режим чата включен";
         }
-
-
-
 
         else {
         response = textMsg;

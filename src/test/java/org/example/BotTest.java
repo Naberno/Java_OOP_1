@@ -55,12 +55,9 @@ public class BotTest{
      * Проверка добавления игры в базу данных при корректном вводе
      */
     @Test
-    public void testAddGameCommandWithValidInput() {
-        String textMsg = "/addgame\nSample Game\nJohn Doe\n2023";
-        when(storage.gameExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(false);
-        String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, times(1)).addPlayedGame("Sample Game", "John Doe", 2023, ChatId);
-        Assert.assertEquals("Игра 'Sample Game' от издателя John Doe (2023) успешно добавлена в список пройденных!", response);
+    public void testHandleAddGameValidInput() {
+        String response = bot.handleAddGame("/addgame Title\nAuthor\n2000", 123L);
+        Assert.assertEquals("Игра 'Title' издателя Author (2000) успешно добавлена!\nОцените игру от 1 до 5:", response);
     }
 
 
@@ -73,8 +70,8 @@ public class BotTest{
         when(storage.gameExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(true);
         messageHandling.parseMessage(textMsg, ChatId);
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
-        Assert.assertEquals("Игра с указанным названием, автором и годом выхода уже существует в базе данных.", response);
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyInt(), anyLong());
+        Assert.assertEquals("Игра с указанным названием, издателем и годом выхода уже существует в базе данных.", response);
     }
 
 
@@ -85,7 +82,7 @@ public class BotTest{
     public void testAddGameCommandWithInvalidYear() {
         String textMsg = "/addgame\nSample Game\nJohn Doe\nInvalidYear";
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyInt(), anyLong());
         Assert.assertEquals("Некорректный формат года выхода.", response);
     }
 
@@ -97,7 +94,7 @@ public class BotTest{
     public void testAddGameCommandWithIncompleteInput() {
         String textMsg = "/addgame\nSample Game\nJohn Doe";
         String response = messageHandling.parseMessage(textMsg, ChatId);
-        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyLong());
+        verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyInt(), anyLong());
         Assert.assertEquals("Некорректный формат ввода. Используйте:\n/addgame Название_игры\nИздатель\nГод_выхода", response);
     }
 
@@ -290,6 +287,100 @@ public class BotTest{
     public void CitationCommandTest() {
         String response = bot.parseMessage("/get", ChatId);
         Assert.assertTrue(response.startsWith("Цитата:"));
+    }
+
+    /**
+     * Тестирование метода handleRating с допустимым рейтингом в пределах разрешенного диапазона.
+     */
+    @Test
+    public void testValidRating() {
+        String response = bot.handleRating("3");
+        Assert.assertTrue(response.startsWith("Отзыв 3⭐ оставлен."));
+    }
+
+    /**
+     * Тестирование метода handleRating с минимальным допустимым рейтингом (1 звезда).
+     */
+    @Test
+    public void testMinimumValidRating() {
+        String response = bot.handleRating("1");
+        Assert.assertEquals("Отзыв 1⭐ оставлен.", response);
+    }
+
+    /**
+     * Тестирование метода handleRating с максимальным допустимым рейтингом (5 звезд).
+     */
+    @Test
+    public void testMaximumValidRating() {
+        String response = bot.handleRating("5");
+        Assert.assertEquals("Отзыв 5⭐ оставлен.", response);
+    }
+
+    /**
+     * Тестирование метода handleRating с рейтингом ниже минимального значения.
+     */
+    @Test
+    public void testBelowMinimumRating() {
+        String response = bot.handleRating("0");
+        Assert.assertEquals("Пожалуйста, введите оценку от 1 до 5.", response);
+    }
+
+    /**
+     * Тестирование метода handleRating с рейтингом выше максимального значения.
+     */
+    @Test
+    public void testAboveMaximumRating() {
+        String response = bot.handleRating("6");
+        Assert.assertEquals("Пожалуйста, введите оценку от 1 до 5.", response);
+    }
+
+    /**
+     * Тестирование метода handleRating с нечисловым значением рейтинга.
+     */
+    @Test
+    public void testNonNumericRating() {
+        String response = bot.handleRating("abc");
+        Assert.assertEquals("Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.", response);
+    }
+
+    /**
+     * Тестирование метода handleRating с пустым значением рейтинга.
+     */
+    @Test
+    public void testEmptyRating() {
+        String response = bot.handleRating("");
+        Assert.assertEquals("Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.", response);
+    }
+
+
+    @Test
+    public void testGetGamesByAverageRating_validData() {
+        storage.addPlayedGame("Game 1", "Author", 2000, 3, ChatId);
+        storage.addPlayedGame("Game 2", "Author", 2000, 2, ChatId);
+        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        Assert.assertEquals("1. Game 1: 3.0⭐", games.get(0));
+        Assert.assertEquals("2. Game 2: 2.0⭐", games.get(1));
+    }
+
+    @Test
+    public void testGetGamesByAverageRating_emptyList() {
+        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        Assert.assertEquals(0, games.size());
+    }
+
+    @Test
+    public void testGetGamesByAverageRating_formatting() {
+        storage.addPlayedGame("Game", "Author", 2000, 3, ChatId);
+        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        Assert.assertEquals("1. Game: 3.0⭐", games.get(0));
+    }
+
+    @Test
+    public void testAverageRating_multipleRatings() {
+        storage.addPlayedGame("Game", "Author", 2000, 3, 123L);
+        storage.addPlayedGame("Game", "Author", 2000, 4, 1234L);
+        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        Assert.assertEquals("1. Game 1: 3.5⭐", games.get(0));
     }
 
 
