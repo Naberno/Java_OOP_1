@@ -42,7 +42,7 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
      * Имя Telegram-бота.
      * Эта переменная используется для хранения имени бота.
      */
-    final private String BOT_NAME = "groobee";
+    final private String BOT_NAME = "Nabo";
 
     /**
      * Экземпляр класса MessageHandling.
@@ -76,26 +76,39 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
     public void onUpdateReceived(Update update) {
         try {
             if (update.hasMessage() && update.getMessage().hasText()) {
-                //Извлекаем из объекта сообщение пользователя
+                // Извлекаем из объекта сообщение пользователя
                 Message message = update.getMessage();
                 String userMessage = message.getText();
-                //Достаем из inMess id чата пользователя
+                // Достаем из inMess id чата пользователя
                 long chatId = message.getChatId();
-                //Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
+
+                // Выводим сообщение пользователя в консоль
+                System.out.println("User Message: " + userMessage);
+
+                // Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
                 String response = messageHandling.parseMessage(userMessage, chatId);
-                //Создаем объект класса SendMessage - наш будущий ответ пользователю
+
+                // Выводим ответ бота в консоль
+                System.out.println("Bot Response: " + response);
+
+                // Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
-                    //Добавляем в наше сообщение id чата, а также наш ответ
-                    outMess.setChatId(String.valueOf(chatId));
-                    outMess.setText(response);
+                // Добавляем в наше сообщение id чата, а также наш ответ
+                outMess.setChatId(String.valueOf(chatId));
+                outMess.setText(response);
+                // Проверяем флаг awaitingRating
+                if (messageHandling.isAwaitingRating()) {
+                    // Если оценка ожидается, вызываем createKeyboard
                     outMess.setReplyMarkup(createKeyboard());
-                    //Отправка в чат
-                    execute(outMess);
                 }
+                // Отправка в чат
+                execute(outMess);
+            }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
 
 
     /**
@@ -106,17 +119,14 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("suggest me list of books in a DETECTIVE genre");
-        row1.add("suggest me list of books in a ROMANTIC genre");
+        row1.add("1");
+        row1.add("2");
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("suggest me list of books in a FANTASY genre");
-        row2.add("suggest me list of books in a SCI-FI genre");
-        KeyboardRow row3 = new KeyboardRow();
-        row3.add("/chat");
-        row3.add("/stopchat");
+        row2.add("3");
+        row2.add("4");
+        row2.add("5");
         keyboard.add(row1);
         keyboard.add(row2);
-        keyboard.add(row3);
         // Установка клавиатуры
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;

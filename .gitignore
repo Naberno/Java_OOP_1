@@ -26,3 +26,7 @@ hs_err_pid*
 # IDEA
 .idea/
 *.iml
+
+# Configuration files
+config.properties
+src/main/java/org/example/Gpt3Chat.java

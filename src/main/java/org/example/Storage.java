@@ -4,76 +4,85 @@ import java.util.ArrayList;
 
 /**
  * Интерфейс для работы с книгами.
- * Позволяет управлять списком прочитанных книг и осуществлять поиск по различным критериям.
+ * Позволяет управлять списком пройденных игр и осуществлять поиск по различным критериям.
  */
-interface BookStorage {
+interface GameStorage {
     /**
-     * Получает список прочитанных книг для указанного чата.
+     * Получает список пройденных игр для указанного чата.
      *
      * @param chatId уникальный идентификатор чата пользователя
-     * @return список прочитанных книг в формате строки
+     * @return список пройденных игр в формате строки
      */
-    ArrayList<String> getReadBooks(long chatId);
+    ArrayList<String> getPlayedGames(long chatId);
 
     /**
-     * Добавляет книгу в список прочитанных книг.
+     * Добавляет книгу в список пройденных игр.
      *
-     * @param title  название книги
-     * @param author автор книги
+     * @param title  название игры
+     * @param author автор игры
      * @param year   год прочтения
      * @param chatId уникальный идентификатор чата пользователя
      */
-    void addReadBook(String title, String author, int year, long chatId);
+    void addPlayedGame(String title, String author, int year, int rating, long chatId);
 
     /**
-     * Удаляет все прочитанные книги для указанного чата.
+     * Удаляет все пройденные игры для указанного чата.
      *
      * @param chatId уникальный идентификатор чата пользователя
      */
-    void clearReadBooks(long chatId);
+    void clearPlayedGames(long chatId);
 
     /**
-     * Получает список прочитанных книг определенного автора для указанного чата.
+     * Получает список пройденных игр определенного автора для указанного чата.
      *
-     * @param author автор книги
+     * @param author автор игры
      * @param chatId уникальный идентификатор чата пользователя
-     * @return список прочитанных книг указанного автора в формате строки
+     * @return список пройденных игр указанного автора в формате строки
      */
-    ArrayList<String> getBooksByAuthor(String author, long chatId);
+    ArrayList<String> getGamesByAuthor(String author, long chatId);
 
     /**
-     * Получает список прочитанных книг за определенный год для указанного чата.
+     * Получает список пройденных игр за определенный год для указанного чата.
      *
      * @param year   год прочтения
      * @param chatId уникальный идентификатор чата пользователя
-     * @return список прочитанных книг за указанный год в формате строки
+     * @return список пройденных игр за указанный год в формате строки
      */
-    ArrayList<String> getBooksByYear(int year, long chatId);
+    ArrayList<String> getGamesByYear(int year, long chatId);
 
     /**
-     * Изменяет существующую книгу новой книгой в списке прочитанных книг.
+     * Получает пронумерованный список всех игр с средним рейтингом.
      *
-     * @param oldTitle  старое название книги
-     * @param oldAuthor старый автор книги
+     * @param chatId уникальный идентификатор чата пользователя
+     * @return пронумерованный список игр с средним рейтингом
+     */
+    ArrayList<String> getGamesByAverageRating(long chatId);
+
+
+    /**
+     * Изменяет существующую книгу новой книгой в списке пройденных игр.
+     *
+     * @param oldTitle  старое название игры
+     * @param oldAuthor старый автор игры
      * @param oldYear   старый год прочтения
-     * @param newTitle  новое название книги
-     * @param newAuthor новый автор книги
+     * @param newTitle  новое название игры
+     * @param newAuthor новый автор игры
      * @param newYear   новый год прочтения
      * @param chatId    уникальный идентификатор чата пользователя
      */
-    void editReadBook(String oldTitle, String oldAuthor, int oldYear,
-                         String newTitle, String newAuthor, int newYear, long chatId);
+    void editPlayedGame(String oldTitle, String oldAuthor, int oldYear,
+                        String newTitle, String newAuthor, int newYear, long chatId);
 
     /**
-     * Проверяет существование указанной книги в списке прочитанных книг.
+     * Проверяет существование указанной игры в списке пройденных игр.
      *
-     * @param title  название книги
-     * @param author автор книги
+     * @param title  название игры
+     * @param author автор игры
      * @param year   год прочтения
      * @param chatId уникальный идентификатор чата пользователя
-     * @return true, если книга существует в списке прочитанных книг, в противном случае - false
+     * @return true, если книга существует в списке пройденных игр, в противном случае - false
      */
-    boolean bookExists(String title, String author, int year, long chatId);
+    boolean gameExists(String title, String author, int year, long chatId);
 }
 
 /**
@@ -90,7 +99,7 @@ interface QuoteStorage {
 }
 
 // Реализация интерфейсов в классе Storage
-class Storage implements BookStorage, QuoteStorage {
+class Storage implements GameStorage, QuoteStorage {
     final private ArrayList<String> quoteList;
 
     /**
@@ -116,24 +125,26 @@ class Storage implements BookStorage, QuoteStorage {
     }
 
     /**
-     * Метод для получения списка прочитанных книг
+     * Метод для получения списка пройденных игр
      */
-    public ArrayList<String> getReadBooks(long chatId) {
-        ArrayList<String> books = new ArrayList<>();
+    public ArrayList<String> getPlayedGames(long chatId) {
+        ArrayList<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
-            String sql = "SELECT title FROM read_books WHERE chat_id = ?";
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
+            String sql = "SELECT title FROM completed_games WHERE chat_id = ?";
             statement = connection.prepareStatement(sql);
             statement.setLong(1, chatId);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                books.add(resultSet.getString("title"));
+                games.add(resultSet.getString("title"));
             }
         } catch (Exception e) {
+            // Логирование ошибки
+            e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         } finally {
@@ -145,25 +156,26 @@ class Storage implements BookStorage, QuoteStorage {
                 e.printStackTrace();
             }
         }
-        return books;
+        return games;
     }
 
     /**
-     * Метод для добавления книги в список прочитанных книг по формату: название /n автор /n год
+     * Метод для добавления игры в список пройденных игр по формату: название /n автор /n год
      */
-    public void addReadBook(String title, String author, int year, long chatId) {
+    public void addPlayedGame(String title, String author, int year, int rating, long chatId) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Создаем запрос на добавление книги в базу данных с указанием названия, автора и года прочтения
-            String sql = "INSERT INTO read_books (title, author, year, chat_id) VALUES (?, ?, ?, ?)";
+            // Создаем запрос на добавление игры в базу данных с указанием названия, автора, года прочтения и рейтинга
+            String sql = "INSERT INTO completed_games (title, author, year, chat_id, rating) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, title);
             statement.setString(2, author);
             statement.setInt(3, year);
             statement.setLong(4, chatId);
+            statement.setInt(5, rating);
             statement.executeUpdate();
             statement.close();
         } catch (Exception e) {
@@ -183,26 +195,26 @@ class Storage implements BookStorage, QuoteStorage {
 
 
     /**
-     * Метод для замены книги в списке прочитанных книг по формату:  старое_название /n старый_автор /n старый_год новое_название /n новый_автор /n новый_год
+     * Метод для замены игры в списке пройденных игр по формату:  старое_название /n старый_автор /n старый_год новое_название /n новый_автор /n новый_год
      */
-    public void editReadBook(String oldTitle, String oldAuthor, int oldYear, String newTitle, String newAuthor, int newYear, long chatId) {
+    public void editPlayedGame(String oldTitle, String oldAuthor, int oldYear, String newTitle, String newAuthor, int newYear, long chatId) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Создаем запрос на обновление книги в базе данных с новыми данными
-            String sql = "UPDATE read_books SET title = ?, author = ?, year = ? WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, newTitle);
-            statement.setString(2, newAuthor);
-            statement.setInt(3, newYear);
-            statement.setString(4, oldTitle);
-            statement.setString(5, oldAuthor);
-            statement.setInt(6, oldYear);
-            statement.setLong(7, chatId);
-            statement.executeUpdate();
-            statement.close();
+            // Создаем запрос на обновление игры в базе данных с новыми данными
+            String sql = "UPDATE completed_games SET title = ?, author = ?, year = ? WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, newTitle);
+                statement.setString(2, newAuthor);
+                statement.setInt(3, newYear);
+                statement.setString(4, oldTitle);
+                statement.setString(5, oldAuthor);
+                statement.setInt(6, oldYear);
+                statement.setLong(7, chatId);
+                statement.executeUpdate();
+            }
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -220,16 +232,16 @@ class Storage implements BookStorage, QuoteStorage {
 
 
     /**
-     * Метод для полной очистки списка прочитанных книг
+     * Метод для полной очистки списка пройденных игр
      */
-    public void clearReadBooks(long chatId) {
+    public void clearPlayedGames(long chatId) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Создаем запрос на удаление записей из таблицы read_books по chat_id
-            String deleteSql = "DELETE FROM read_books WHERE chat_id = ?";
+            // Создаем запрос на удаление записей из таблицы completed_games по chat_id
+            String deleteSql = "DELETE FROM completed_games WHERE chat_id = ?";
             PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
             deleteStatement.setLong(1, chatId);
             deleteStatement.executeUpdate();
@@ -253,25 +265,25 @@ class Storage implements BookStorage, QuoteStorage {
     }
 
     /**
-     * Метод для получения книг одного автора из списка прочитанных книг
+     * Метод для получения игр одного автора из списка пройденных игр
      */
-    public ArrayList<String> getBooksByAuthor(String author, long chatId) {
-        ArrayList<String> books = new ArrayList<>();
+    public ArrayList<String> getGamesByAuthor(String author, long chatId) {
+        ArrayList<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
-            String sql = "SELECT title FROM read_books WHERE author = ? AND chat_id = ?";
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
+            String sql = "SELECT title FROM completed_games WHERE author = ? AND chat_id = ?";
             statement = connection.prepareStatement(sql);
             statement.setString(1, author);
             statement.setLong(2, chatId);
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                books.add(resultSet.getString("title"));
+                games.add(resultSet.getString("title"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -285,29 +297,29 @@ class Storage implements BookStorage, QuoteStorage {
             }
         }
 
-        return books;
+        return games;
     }
 
     /**
-     * Метод для получения книг по конкретному году из списка прочитанных книг
+     * Метод для получения игр по конкретному году из списка пройденных игр
      */
-    public ArrayList<String> getBooksByYear(int year, long chatId) {
-        ArrayList<String> books = new ArrayList<>();
+    public ArrayList<String> getGamesByYear(int year, long chatId) {
+        ArrayList<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
-            String sql = "SELECT title FROM read_books WHERE year = ? AND chat_id = ?";
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
+            String sql = "SELECT title FROM completed_games WHERE year = ? AND chat_id = ?";
             statement = connection.prepareStatement(sql);
             statement.setInt(1, year);
             statement.setLong(2, chatId);
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                books.add(resultSet.getString("title"));
+                games.add(resultSet.getString("title"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -320,55 +332,68 @@ class Storage implements BookStorage, QuoteStorage {
                 e.printStackTrace();
             }
         }
-        return books;
+        return games;
     }
 
 
-    /*
-     * Метод для удаления книги из списка прочитанных книг по формату: название /n автор /n год
+    /**
+     * Возвращает список игр с сортировкой по среднему рейтингу (от наибольшего значения)
+     * для заданного id беседы.
+     * 
+     * @param chatId id беседы
+     * @return список строк со всеми играми, отсортированными по среднему рейтингу
      */
-  /*  public void removeReadBook(String title, String author, int year, long chatId) {
+    public ArrayList<String> getGamesByAverageRating(long chatId) {
+        ArrayList<String> games = new ArrayList<>();
         Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
+            String sql = "SELECT title, AVG(rating) AS avg_rating FROM completed_games GROUP BY title ORDER BY avg_rating DESC";
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
 
-            // Создаем запрос на удаление книги из базы данных с указанием названия, автора, года прочтения и chatId
-            String sql = "DELETE FROM read_books WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, title);
-            statement.setString(2, author);
-            statement.setInt(3, year);
-            statement.setLong(4, chatId);
-            statement.executeUpdate();
-            statement.close();
+            int rank = 1;
+            while (resultSet.next()) {
+                String title = resultSet.getString("title");
+                double avgRating = resultSet.getDouble("avg_rating");
+
+                // Форматирование строки для отображения среднего рейтинга с одним знаком после запятой
+                String formattedAvgRating = String.format("%.1f", avgRating);
+
+                games.add(rank + ". " + title + ": " + formattedAvgRating + "⭐");
+                rank++;
+            }
         } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
+            e.printStackTrace();
         } finally {
             try {
-                if (connection != null) {
-                    connection.close();
-                }
+                if (resultSet != null) resultSet.close();
+                if (statement != null) statement.close();
+                if (connection != null) connection.close();
             } catch (SQLException e) {
-                System.err.println(e.getClass().getName() + ": " + e.getMessage());
-                System.exit(0);
+                e.printStackTrace();
             }
         }
-    } */
+        return games;
+    }
+
 
     /**
-     * Метод для проверки существования книги в списке прочитанных книг
+     * Метод для проверки существования игры в списке пройденных игр
      */
-    public boolean bookExists(String title, String author, int year, long chatId) {
+    public boolean gameExists(String title, String author, int year, long chatId) {
         Connection connection = null;
         boolean exists = false;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Создаем запрос на поиск книги в базе данных с указанным названием, автором и годом прочтения
-            String sql = "SELECT * FROM read_books WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
+            // Создаем запрос на поиск игры в базе данных с указанным названием, автором и годом прочтения
+            String sql = "SELECT * FROM completed_games WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, title);
             statement.setString(2, author);
@@ -400,45 +425,45 @@ class Storage implements BookStorage, QuoteStorage {
     }
 
     /**
-     * Метод для обновления списка прочитанных книг
+     * Метод для обновления списка пройденных игр
      */
-    public void updateReadBooks(long chatId, ArrayList<String> readBooks) {
+    public void updatePlayedGames(long chatId, ArrayList<String> playedGames) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            // Получаем текущий список книг из базы данных
-            ArrayList<String> currentBooks = getReadBooks(chatId);
+            // Получаем текущий список игр из базы данных
+            ArrayList<String> currentGames = getPlayedGames(chatId);
 
-            // Удаляем книги, которые были удалены из списка
-            for (String book : currentBooks) {
-                if (!readBooks.contains(book)) {
+            // Удаляем игры, которые были удалены из списка
+            for (String game : currentGames) {
+                if (!playedGames.contains(game)) {
                     // Удаляем книгу из базы данных
-                    String deleteSql = "DELETE FROM read_books WHERE chat_id = ? AND title = ?";
+                    String deleteSql = "DELETE FROM completed_games WHERE chat_id = ? AND title = ?";
                     PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
                     deleteStatement.setLong(1, chatId);
-                    deleteStatement.setString(2, book);
+                    deleteStatement.setString(2, game);
                     deleteStatement.executeUpdate();
                     deleteStatement.close();
                 }
             }
 
-            // Обновляем книги в базе данных
+            // Обновляем игры в базе данных
             PreparedStatement selectStatement = null;
-            for (String book : readBooks) {
+            for (String game : playedGames) {
                 // Проверяем, существует ли книга в базе данных
-                String selectSql = "SELECT * FROM read_books WHERE chat_id = ? AND title = ?";
+                String selectSql = "SELECT * FROM completed_games WHERE chat_id = ? AND title = ?";
                 selectStatement = connection.prepareStatement(selectSql);
                 selectStatement.setLong(1, chatId);
-                selectStatement.setString(2, book);
+                selectStatement.setString(2, game);
                 ResultSet resultSet = selectStatement.executeQuery();
 
-                // Если книги нет в базе данных, добавляем ее
+                // Если игры нет в базе данных, добавляем ее
                 if (!resultSet.next()) {
-                    String insertSql = "INSERT INTO read_books (title, chat_id) VALUES (?, ?)";
+                    String insertSql = "INSERT INTO completed_games (title, chat_id) VALUES (?, ?)";
                     PreparedStatement insertStatement = connection.prepareStatement(insertSql);
-                    insertStatement.setString(1, book);
+                    insertStatement.setString(1, game);
                     insertStatement.setLong(2, chatId);
                     insertStatement.executeUpdate();
                     insertStatement.close();
@@ -463,16 +488,16 @@ class Storage implements BookStorage, QuoteStorage {
 
 
     /**
-     * Метод для получения списка прочитанных книг в полном формате (название, автор, год)
+     * Метод для получения списка пройденных игр в полном формате (название, автор, год)
      */
     public ArrayList<String> getAllValues(long chatId) {
         Connection connection = null;
         ArrayList<String> allValues = new ArrayList<>();
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:read_books.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
-            String sql = "SELECT title, author, year FROM read_books WHERE chat_id = ?";
+            String sql = "SELECT title, author, year FROM completed_games WHERE chat_id = ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setLong(1, chatId);
             ResultSet resultSet = statement.executeQuery();
