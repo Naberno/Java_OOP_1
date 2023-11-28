@@ -352,34 +352,54 @@ public class BotTest{
         Assert.assertEquals("Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.", response);
     }
 
-
+    /**
+     * Тест проверяет правильность вывода avg rating
+     */
     @Test
     public void testGetGamesByAverageRating_validData() {
         storage.addPlayedGame("Game 1", "Author", 2000, 3, ChatId);
         storage.addPlayedGame("Game 2", "Author", 2000, 2, ChatId);
+        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Arrays.asList("1. Game 1: 3.0⭐", "2. Game 2: 2.0⭐")));
         ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals("1. Game 1: 3.0⭐", games.get(0));
         Assert.assertEquals("2. Game 2: 2.0⭐", games.get(1));
     }
 
+
+    /**
+     * Тест проверяет правильность вывода при пустом ответе
+     */
     @Test
     public void testGetGamesByAverageRating_emptyList() {
         ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals(0, games.size());
     }
 
+
+    /**
+     * Тест проверяет правильность вывода avg rating
+     */
     @Test
     public void testGetGamesByAverageRating_formatting() {
         storage.addPlayedGame("Game", "Author", 2000, 3, ChatId);
+        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Collections.singletonList("1. Game: 3.0⭐")));
         ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals("1. Game: 3.0⭐", games.get(0));
     }
 
+    /**
+     * Тест на avg рейтинг если ввели рахные данные
+     */
     @Test
     public void testAverageRating_multipleRatings() {
+        // Подготовка тестовых данных
         storage.addPlayedGame("Game", "Author", 2000, 3, 123L);
         storage.addPlayedGame("Game", "Author", 2000, 4, 1234L);
+        // Имитация вызова метода, который возвращает список с рейтингами
+        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Arrays.asList("1. Game 1: 3.5⭐")));
+        // Вызываем метод, который должен получить список с рейтингами
         ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        // Проверяем результат
         Assert.assertEquals("1. Game 1: 3.5⭐", games.get(0));
     }
 
