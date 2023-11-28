@@ -21,7 +21,6 @@ interface GameStorage {
      * @param title  название игры
      * @param author автор игры
      * @param year   год прочтения
-     * @param rating рейтинг игры
      * @param chatId уникальный идентификатор чата пользователя
      */
     void addPlayedGame(String title, String author, int year, int rating, long chatId);
@@ -144,6 +143,8 @@ class Storage implements GameStorage, QuoteStorage {
                 games.add(resultSet.getString("title"));
             }
         } catch (Exception e) {
+            // Логирование ошибки
+            e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         } finally {
@@ -204,16 +205,16 @@ class Storage implements GameStorage, QuoteStorage {
 
             // Создаем запрос на обновление игры в базе данных с новыми данными
             String sql = "UPDATE completed_games SET title = ?, author = ?, year = ? WHERE title = ? AND author = ? AND year = ? AND chat_id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, newTitle);
-            statement.setString(2, newAuthor);
-            statement.setInt(3, newYear);
-            statement.setString(4, oldTitle);
-            statement.setString(5, oldAuthor);
-            statement.setInt(6, oldYear);
-            statement.setLong(7, chatId);
-            statement.executeUpdate();
-            statement.close();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, newTitle);
+                statement.setString(2, newAuthor);
+                statement.setInt(3, newYear);
+                statement.setString(4, oldTitle);
+                statement.setString(5, oldAuthor);
+                statement.setInt(6, oldYear);
+                statement.setLong(7, chatId);
+                statement.executeUpdate();
+            }
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -517,6 +518,5 @@ class Storage implements GameStorage, QuoteStorage {
         }
         return allValues;
     }
-
 
 }
