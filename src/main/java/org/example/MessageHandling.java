@@ -26,9 +26,7 @@ public class MessageHandling implements MessageProcessor {
 
     private Storage storage;
     private PuzzleGame puzzleGame;
-    private Gpt3Chat chatGpt;
     private boolean puzzleMode;
-    private boolean chatMode;
     private boolean awaitingRating;
     private String lastAddedGameTitle;
     private String lastAddedGameAuthor;
@@ -46,9 +44,7 @@ public class MessageHandling implements MessageProcessor {
     public MessageHandling() {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
-        chatGpt = new Gpt3Chat();
         puzzleMode = false;
-        chatMode = false;
         awaitingRating = false;
     }
 
@@ -70,8 +66,6 @@ public class MessageHandling implements MessageProcessor {
             response = handleAddGame(textMsg, chatId);
         } else if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
-        } else if (chatMode) {
-            response = handleChatMode(textMsg, chatId);
         } else{
             response = handleDefaultMode(textMsg, chatId);
         }
@@ -108,28 +102,6 @@ public class MessageHandling implements MessageProcessor {
             response = puzzleGame.checkAnswer(chatId, userAnswer);
         } else {
             response = puzzleGame.checkAnswer(chatId, textMsg);
-        }
-        return response;
-    }
-
-
-    /**Подлкючает ChatGpt API
-     *
-     * @param textMsg Входящий текстовый запрос от пользователя.
-     * @param chatId  Идентификатор чата пользователя.
-     * @return Ответ на запрос пользователя в режиме ассистента
-     */
-    private String handleChatMode(String textMsg, long chatId) {
-        String response = "";
-        if (textMsg.equals("/stopchat")) {
-            response = "Режим чата завершен";
-            chatMode = false; // Выход из режима чата
-        } else {
-            try {
-                response = chatGpt.generateResponse(textMsg);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return response;
     }
@@ -367,11 +339,6 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
-
-            //Вход в режим чата с ассистентом
-        } else if (textMsg.equals("/chat")){
-            chatMode = true;
-            response = "Режим чата включен";
         }
 
         else {
