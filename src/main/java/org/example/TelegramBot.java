@@ -76,26 +76,35 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
     public void onUpdateReceived(Update update) {
         try {
             if (update.hasMessage() && update.getMessage().hasText()) {
-                //Извлекаем из объекта сообщение пользователя
+                // Извлекаем из объекта сообщение пользователя
                 Message message = update.getMessage();
                 String userMessage = message.getText();
-                //Достаем из inMess id чата пользователя
+                // Достаем из inMess id чата пользователя
                 long chatId = message.getChatId();
-                //Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
+
+                // Выводим сообщение пользователя в консоль
+                System.out.println("User Message: " + userMessage);
+
+                // Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
                 String response = messageHandling.parseMessage(userMessage, chatId);
-                //Создаем объект класса SendMessage - наш будущий ответ пользователю
+
+                // Выводим ответ бота в консоль
+                System.out.println("Bot Response: " + response);
+
+                // Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
-                    //Добавляем в наше сообщение id чата, а также наш ответ
-                    outMess.setChatId(String.valueOf(chatId));
-                    outMess.setText(response);
-                    outMess.setReplyMarkup(createKeyboard());
-                    //Отправка в чат
-                    execute(outMess);
-                }
+                // Добавляем в наше сообщение id чата, а также наш ответ
+                outMess.setChatId(String.valueOf(chatId));
+                outMess.setText(response);
+                outMess.setReplyMarkup(createKeyboard());
+                // Отправка в чат
+                execute(outMess);
+            }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
 
 
     /**
@@ -106,14 +115,14 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("1");
-        row1.add("2");
+        //row1.add("1");
+        //row1.add("2");
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("3");
-        row2.add("4");
+        //row2.add("3");
+        //row2.add("4");
         KeyboardRow row3 = new KeyboardRow();
-        row3.add("5");
-        row3.add("!?");
+        //row3.add("5");
+        //row3.add("!?");
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
