@@ -96,7 +96,11 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
                 // Добавляем в наше сообщение id чата, а также наш ответ
                 outMess.setChatId(String.valueOf(chatId));
                 outMess.setText(response);
-                outMess.setReplyMarkup(createKeyboard());
+                // Проверяем флаг awaitingRating
+                if (messageHandling.isAwaitingRating()) {
+                    // Если оценка ожидается, вызываем createKeyboard
+                    outMess.setReplyMarkup(createKeyboard());
+                }
                 // Отправка в чат
                 execute(outMess);
             }
@@ -115,17 +119,14 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        //row1.add("1");
-        //row1.add("2");
+        row1.add("1");
+        row1.add("2");
         KeyboardRow row2 = new KeyboardRow();
-        //row2.add("3");
-        //row2.add("4");
-        KeyboardRow row3 = new KeyboardRow();
-        //row3.add("5");
-        //row3.add("!?");
+        row2.add("3");
+        row2.add("4");
+        row2.add("5");
         keyboard.add(row1);
         keyboard.add(row2);
-        keyboard.add(row3);
         // Установка клавиатуры
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;
