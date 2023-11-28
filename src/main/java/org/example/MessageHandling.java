@@ -35,6 +35,9 @@ public class MessageHandling implements MessageProcessor {
     private int lastAddedGameYear;
     private long lastAddedGameChatId;
 
+    public boolean isAwaitingRating() {
+        return awaitingRating;
+    }
 
     /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
@@ -222,13 +225,13 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.equals("/help") || textMsg.equals("Помощь")){
             response = """
                     Привет, я умею:
-                    /chat - Включать чат-бота для помощи в разных вопросах
                     /addgame - Добавить игру, которую ты уже прошел
                     /getplayed - Список пройденных игр
-                    /removegame - Удалить игру из списка
-                    /editgame - Изменяет выбранную игру из списка на написанную
+                    /getbyrating - Рейтинг игр всех пользователей
                     /getbyauthor - Получить список игр по конкретному автору
                     /getbyyear - Получить список игр по конкретному году
+                    /removegame - Удалить игру из списка
+                    /editgame - Изменяет выбранную игру из списка на написанную
                     /playpuzzle - Быстрый квиз по разным темам для развлечения
                     """
             ;
