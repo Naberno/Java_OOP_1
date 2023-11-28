@@ -1,7 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
-
+import java.io.IOException;
 
 /**
  * Интерфейс для обработки сообщений пользователя
@@ -27,15 +27,13 @@ public class MessageHandling implements MessageProcessor {
     private Storage storage;
     private PuzzleGame puzzleGame;
     private Gpt3Chat chatGpt;
-  
+    private boolean puzzleMode;
+    private boolean chatMode;
+    private boolean awaitingRating;
     private String lastAddedGameTitle;
     private String lastAddedGameAuthor;
     private int lastAddedGameYear;
     private long lastAddedGameChatId;
-    private boolean chatMode;
-    private boolean puzzleMode;
-    private boolean awaitingRating;
-  
 
 
     /**
@@ -45,11 +43,10 @@ public class MessageHandling implements MessageProcessor {
     public MessageHandling() {
         storage = new Storage();
         puzzleGame = new PuzzleGame();
-
         chatGpt = new Gpt3Chat();
-        awaitingRating = false;
         puzzleMode = false;
         chatMode = false;
+        awaitingRating = false;
     }
 
 
@@ -63,6 +60,7 @@ public class MessageHandling implements MessageProcessor {
 
     public String parseMessage(String textMsg, long chatId) {
         String response;
+
         if (awaitingRating) {
             response = handleRating(textMsg);
         } else if (textMsg.startsWith("/addgame")) {
@@ -74,6 +72,7 @@ public class MessageHandling implements MessageProcessor {
         } else{
             response = handleDefaultMode(textMsg, chatId);
         }
+
         return response;
     }
 
@@ -110,7 +109,6 @@ public class MessageHandling implements MessageProcessor {
         return response;
     }
 
-
     private String handleChatMode(String textMsg, long chatId) {
         String response = "";
         if (textMsg.equals("/stopchat")) {
@@ -123,9 +121,10 @@ public class MessageHandling implements MessageProcessor {
                 e.printStackTrace();
             }
         }
-      
+        return response;
+    }
 
-    private String handleAddGame(String textMsg, long chatId) {
+    public String handleAddGame(String textMsg, long chatId) {
         String response;
 
         if (textMsg.length() > 9) {
@@ -145,7 +144,7 @@ public class MessageHandling implements MessageProcessor {
                         lastAddedGameChatId = chatId;
                         awaitingRating = true;
 
-                        response = "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена! Оцените игру от 1 до 5:";
+                        response = "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена!\nОцените игру от 1 до 5:";
                         return response;  // Возвращаем ответ, чтобы прервать дальнейшую обработку в текущем вызове
                     } else {
                         response = "Игра с указанным названием, издателем и годом выхода уже существует в базе данных.";
@@ -154,17 +153,16 @@ public class MessageHandling implements MessageProcessor {
                     response = "Некорректный формат года выхода.";
                 }
             } else {
-                response = "Некорректный формат ввода. Используйте:\n/addgame Названиеигры\nИздатель\nГодвыхода";
+                response = "Некорректный формат ввода. Используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";
             }
         } else {
-            response = "Чтобы добавить игру используйте:\n/addgame Названиеигры\nИздатель\nГодвыхода";
+            response = "Чтобы добавить игру используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";
         }
 
         return response;
     }
 
-
-    private String handleRating(String textMsg) {
+    public String handleRating(String textMsg) {
         String response;
 
         try {
@@ -183,9 +181,9 @@ public class MessageHandling implements MessageProcessor {
             response = "Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.";
         }
 
-
         return response;
     }
+
 
     /**
      * Обработчик сообщений в режиме по умолчанию.
@@ -214,7 +212,6 @@ public class MessageHandling implements MessageProcessor {
             ;
         }else if (textMsg.equals("/get") || textMsg.equals("Просвети")) {
             response = storage.getRandQuote();
-
 
         } else if (textMsg.startsWith("/editgame")) {
             if (textMsg.length() > 10) {
@@ -345,7 +342,7 @@ public class MessageHandling implements MessageProcessor {
             // Вход в режим головоломки
             puzzleMode = true;
             response = puzzleGame.startPuzzle(chatId);
-          
+
             //Вход в режим чата с ассистентом
         } else if (textMsg.equals("/chat")){
             chatMode = true;
