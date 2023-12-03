@@ -31,6 +31,7 @@ interface TelegramBotInterface {
  * Класс для реализации Телеграмм-бота
  */
 public class TelegramBot extends TelegramLongPollingBot implements TelegramBotInterface {
+    boolean showKeyboard = false;
 
     /**
      * Токен для Telegram-бота.
@@ -76,21 +77,18 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
     public void onUpdateReceived(Update update) {
         try {
             if (update.hasMessage() && update.getMessage().hasText()) {
-                // Извлекаем из объекта сообщение пользователя
                 Message message = update.getMessage();
                 String userMessage = message.getText();
-                // Достаем из inMess id чата пользователя
                 long chatId = message.getChatId();
-
+                if (userMessage.equals("/addgame")) {
+                    showKeyboard = true; // Устанавливаем флаг показа кнопок в true
+                }
                 // Выводим сообщение пользователя в консоль
                 System.out.println("User Message: " + userMessage);
-
                 // Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
                 String response = messageHandling.parseMessage(userMessage, chatId);
-
                 // Выводим ответ бота в консоль
                 System.out.println("Bot Response: " + response);
-
                 // Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
                 // Добавляем в наше сообщение id чата, а также наш ответ
@@ -101,34 +99,36 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
                     // Если оценка ожидается, вызываем createKeyboard
                     outMess.setReplyMarkup(createKeyboard());
                 }
-                // Отправка в чат
-                execute(outMess);
-            }
+                    // Отправка в чат
+                    execute(outMess);
+                }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+        showKeyboard = false; // Сбрасываем флаг показа кнопок
     }
-
-
 
     /**
      * Метод для создания клавиатуры в боте
      */
     public ReplyKeyboardMarkup createKeyboard() {
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-        // Создание ряда клавиш
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add("1");
-        row1.add("2");
-        KeyboardRow row2 = new KeyboardRow();
-        row2.add("3");
-        row2.add("4");
-        row2.add("5");
-        keyboard.add(row1);
-        keyboard.add(row2);
-        // Установка клавиатуры
-        keyboardMarkup.setKeyboard(keyboard);
-        return keyboardMarkup;
-    }
+        if (showKeyboard) {
+            ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+            List<KeyboardRow> keyboard = new ArrayList<>();
+            // Создание ряда клавиш
+            KeyboardRow row1 = new KeyboardRow();
+            row1.add("1");
+            row1.add("2");
+            KeyboardRow row2 = new KeyboardRow();
+            row2.add("3");
+            row2.add("4");
+            row2.add("5");
+            keyboard.add(row1);
+            keyboard.add(row2);
+            // Установка клавиатуры
+            keyboardMarkup.setKeyboard(keyboard);
+            return keyboardMarkup;
+            }
+            return null; // Возвращаем null, если кнопки не нужны
+        }
 }
