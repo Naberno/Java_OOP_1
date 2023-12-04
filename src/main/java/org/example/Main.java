@@ -5,6 +5,9 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+/**
+ * Класс Main для запуска ботов.
+ */
 public class Main {
     /**
      Статическая переменная для логгера, созданного через LogManager.
