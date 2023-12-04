@@ -77,7 +77,11 @@
             <artifactId>json</artifactId>
             <version>20230618</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.vk.api</groupId>
+            <artifactId>sdk</artifactId>
+            <version>1.0.6</version>
+        </dependency>
     </dependencies>
 
 </project>
