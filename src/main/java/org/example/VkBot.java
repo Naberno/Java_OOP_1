@@ -53,7 +53,7 @@ public class VkBot {
             }
             ts = vk.messages().getLongPollServer(actor).execute().getTs();
             Thread.sleep(10);
-            // exit
+            // exit 124144214
         }
     }
 }
