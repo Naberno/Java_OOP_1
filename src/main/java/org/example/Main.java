@@ -24,6 +24,8 @@ public class Main {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(new TelegramBot());
+
+            VkBot.main(args); // вызов main метода VkBot
         } catch (TelegramApiException e) {
             logger.error("Error registering bot", e);
         }
