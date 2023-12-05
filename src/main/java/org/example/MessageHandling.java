@@ -32,6 +32,14 @@ public class MessageHandling implements MessageProcessor {
     private String lastAddedGameAuthor;
     private int lastAddedGameYear;
     private long lastAddedGameChatId;
+    private boolean awaitingGameNumberForEdit;
+    private int lastAddedGameNumber;
+    private boolean awaitingEditTitle;
+    private boolean awaitingEditAuthor;
+    private boolean awaitingEditYear;
+    private boolean awaitingAuthorForGamesByAuthor;
+    private boolean awaitingYearForGamesByYear;
+    private boolean awaitingGameNumberForRemoval;
 
     public boolean isAwaitingRating() {
         return awaitingRating;
@@ -42,6 +50,13 @@ public class MessageHandling implements MessageProcessor {
      * а также устанавливает начальное значение режима головоломки как false.
      */
     public MessageHandling() {
+        awaitingGameNumberForRemoval = false;
+        awaitingYearForGamesByYear = false;
+        awaitingAuthorForGamesByAuthor = false;
+        awaitingEditYear = false;
+        awaitingEditAuthor = false;
+        awaitingEditTitle = false;
+        awaitingGameNumberForEdit = false;
         storage = new Storage();
         puzzleGame = new PuzzleGame();
         puzzleMode = false;
@@ -59,8 +74,15 @@ public class MessageHandling implements MessageProcessor {
 
     public String parseMessage(String textMsg, long chatId) {
         String response;
-
-        if (awaitingRating) {
+        if (awaitingEditYear){
+            response = handleEditYear(textMsg, chatId);
+        }else if (awaitingEditAuthor) {
+            response = handleEditAuthor(textMsg, chatId);
+        }else if (awaitingEditTitle) {
+            response = handleEditTitle(textMsg, chatId);
+        } else if (awaitingGameNumberForEdit){
+            response = handleEditNumber(textMsg, chatId);
+        }else if (awaitingRating) {
             response = handleRating(textMsg);
         } else if (textMsg.startsWith("/addgame")) {
             response = handleAddGame(textMsg, chatId);
@@ -75,11 +97,11 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
-     * Обработчик сообщений в режиме головоломки.
-     *
-     * @param textMsg Входящий текстовый запрос от пользователя.
-     * @param chatId  Идентификатор чата пользователя.
-     * @return Ответ на запрос пользователя в режиме головоломки.
+     Обрабатывает действия пользователя в режиме головоломки.
+
+     @param textMsg сообщение пользователя
+     @param chatId  идентификатор чата
+     @return ответ бота на действие пользователя
      */
     private String handlePuzzleMode(String textMsg, long chatId) {
         String response;
@@ -108,11 +130,11 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
-     * Обрабатывает команду добавления новой игры.
-     *
-     * @param textMsg текст сообщения с командой и данными о новой игре
-     * @param chatId id беседы, в которой пришло сообщение
-     * @return стринговый ответ для пользователя
+        Обрабатывает команду добавления игры в базу данных.
+
+        @param textMsg текстовое сообщение, полученное от пользователя
+        @param chatId идентификатор чата пользователя
+        @return сообщение с ответом, указывающее на успешность или неудачу добавления игры
      */
     public String handleAddGame(String textMsg, long chatId) {
         String response;
@@ -154,10 +176,10 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
-     * Обрабатывает ввод рейтинга для недавно добавленной игры.
-     *
-     * @param textMsg текст сообщения с введённым рейтингом
-     * @return стринговый ответ для пользователя
+     Обрабатывает оценку пользователя по текстовому сообщению.
+
+     @param textMsg текстовое сообщение с оценкой
+     @return ответный текстовый ответ, казывающее на успешное или неудачное добавление оценки игре
      */
     public String handleRating(String textMsg) {
         String response;
@@ -183,11 +205,145 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
+     Обрабатывает команду изменения номера игры.
+
+     @param textMsg текстовое сообщение с указанным пользователем номером игры
+     @param chatId идентификатор чата с пользователем
+     @return ответное сообщение в виде строки, уведомляющее пользователя о изменения названия игры или неккоректной форме записи запроса
+     */
+    public String handleEditNumber(String textMsg, long chatId) {
+        String response;
+        int gameNumber = Integer.parseInt(textMsg.trim());
+        ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+
+        if (!awaitingGameNumberForEdit) {
+            response = "Введите номер игры";
+            awaitingGameNumberForEdit = true;
+        } else {
+            if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
+                lastAddedGameNumber = gameNumber;
+                awaitingGameNumberForEdit = false;
+                lastAddedGameTitle = textMsg.trim();
+                response = "Введите новое название игры.";
+                awaitingEditTitle = true;
+            }
+            else {
+                response = "Неверный формат. Введите номер игры из списка /getplayed";
+            }
+        }
+
+        return response;
+    }
+
+
+    /**
+     * Обрабатывает команду добавления названия новой игры.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId идентификатор чата с пользователем
+     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении названия игры
+     */
+    public String handleEditTitle(String textMsg, long chatId) {
+        String response;
+
+        if (!awaitingEditTitle) {
+            response = "Введите новое название игры";
+            awaitingEditTitle = true;
+        } else {
+            if (textMsg.contains("\n") || (textMsg.contains("  "))){
+                response = "Неверный формат. Введите название игры";
+            }
+            else {
+                awaitingEditTitle = false;
+                lastAddedGameTitle = textMsg.trim();
+                response = "Введите нового издателя игры.";
+                awaitingEditAuthor = true;
+            }
+        }
+
+        return response;
+    }
+
+
+    /**
+     * Обрабатывает команду добавления издателя к новой игре.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId идентификатор чата с пользователем
+     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении издателя игры
+     */
+    public String handleEditAuthor(String textMsg, long chatId) {
+        String response;
+        if (!awaitingEditAuthor) {
+            response = "Введите нового издателя игры";
+            awaitingEditAuthor = true;
+        } else {
+            if (textMsg.contains("\n") || (textMsg.contains("  "))){
+                response = "Неверный формат. Введите издателя игры";
+            }
+            else {
+                awaitingEditAuthor = false;
+                lastAddedGameAuthor = textMsg.trim();
+                lastAddedGameChatId = chatId;
+                response = "Введите год новый выхода игры.";
+                awaitingEditYear = true;
+            }
+        }
+
+        return response;
+    }
+
+
+    /**
+     * Обрабатывает команду изменения года к новой игре.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId идентификатор чата с пользователем
+     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении года издания игры,
+     * так же проверяет игру в процессе добавления на уникальность
+     */
+    public String handleEditYear(String textMsg, long chatId) {
+        int gameNumber;
+        String newTitle;
+        String newAuthor;
+        int newYear;
+        newTitle = lastAddedGameTitle;
+        newAuthor = lastAddedGameAuthor;
+        // Проверка формата
+        if (!textMsg.matches("\\d{4}") || textMsg.matches(".*[a-zA-Z].*")) {
+            return "Некорректный формат года. Пожалуйста, введите четыре цифры без букв.";
+        }
+        newYear = Integer.parseInt(textMsg.trim());
+        if (storage.gameExists(newTitle, newAuthor, newYear, chatId)) {
+            awaitingEditTitle = true;
+            awaitingEditAuthor = false;
+            awaitingEditYear = false;
+            return "Игра с таким названием, автором и годом уже существует. Пожалуйста, введите название заново:";
+        } else {
+            gameNumber = lastAddedGameNumber;
+            ArrayList<String> playedGames = storage.getAllValues(chatId);
+            String[] oldGameParts = playedGames.get(gameNumber - 1).split("\n");
+            String oldTitle = oldGameParts[0];
+            String oldAuthor = oldGameParts[1];
+            int oldYear = Integer.parseInt(oldGameParts[2]);
+
+            // Заменяем книгу в базе данных
+            storage.editPlayedGame(oldTitle, oldAuthor, oldYear, newTitle, newAuthor, newYear, chatId);
+
+            awaitingEditYear = false;
+            return "Игра '" + oldTitle + "' успешно заменена на игру '" + newTitle + "' от издателя " + newAuthor + " (" + newYear + ") в списке пройденных!";
+        }
+    }
+
+
+
+
+    /**
      * Обработчик сообщений в режиме по умолчанию.
      *
      * @param textMsg Входящий текстовый запрос от пользователя.
-     * @param chatId  Идентификатор чата пользователя.
-     * @return Ответ на запрос пользователя в режиме по умолчанию.
+     * @param chatId   идентификатор чата с пользователем
+     * @return ответ на запрос пользователя командами
      */
     private String handleDefaultMode(String textMsg, long chatId) {
         String response;
@@ -211,46 +367,9 @@ public class MessageHandling implements MessageProcessor {
             response = storage.getRandQuote();
 
         } else if (textMsg.startsWith("/editgame")) {
-            if (textMsg.length() > 10) {
-                // Получаем уникальный номер игры и новые данные игры, введенные пользователем
-                String[] parts = textMsg.substring(10).split("\n");
-                if (parts.length == 4) {
-                    int gameNumber;
-                    String newTitle;
-                    String newAuthor;
-                    int newYear;
-                    try {
-                        // Получаем уникальный номер игры
-                        gameNumber = Integer.parseInt(parts[0].trim());
-                        // Получаем новые данные игры
-                        newTitle = parts[1].trim();
-                        newAuthor = parts[2].trim();
-                        newYear = Integer.parseInt(parts[3].trim());
-
-                        // Проверяем существование игры с указанным уникальным номером в списке пройденных игр
-                        ArrayList<String> playedGames = storage.getAllValues(chatId);
-                        if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
-                            // Получаем старые данные игры
-                            String[] oldGameParts = playedGames.get(gameNumber - 1).split("\n");
-                            String oldTitle = oldGameParts[0];
-                            String oldAuthor = oldGameParts[1];
-                            int oldYear = Integer.parseInt(oldGameParts[2]);
-
-                            // Заменяем книгу в базе данных
-                            storage.editPlayedGame(oldTitle, oldAuthor, oldYear, newTitle, newAuthor, newYear, chatId);
-                            response = "Игра '" + oldTitle + "' успешно заменена на игру '" + newTitle + "' от издателя " + newAuthor + " (" + newYear + ") в списке пройденных!";
-                        } else {
-                            response = "Указанный уникальный номер игры не существует в списке пройденных игр.";
-                        }
-                    } catch (NumberFormatException e) {
-                        response = "Некорректный формат уникального номера игры или года выхода.";
-                    }
-                } else {
-                    response = "Некорректный формат ввода. Используйте:\n/editgame Номер_в_списке\nНовое_название\nНовый_издатель\nНовый_год";
-                }
-            } else {
-                response = "Чтоыбы редактировать игру, используйте:\n/editgame Номер_в_списке\nНовое_название\nНовый_издатель\nНовый_год";
-            }
+            String numberRequest = "Введите номер из списка:";
+            response = numberRequest;
+            awaitingGameNumberForEdit = true; // Флаг ожидания имени автора для команды /getbyauthor
 
 
         } else if (textMsg.equals("/clearplayed")) {
@@ -274,32 +393,15 @@ public class MessageHandling implements MessageProcessor {
 
 
         } else if (textMsg.startsWith("/getbyauthor")) {
-            if (textMsg.length() > 12) {
-                String author = textMsg.substring(13); // Получаем имя автора из сообщения
-                ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
-                if (!gamesByAuthor.isEmpty()) {
-                    response = "Игры издателя " + author + ":\n" + String.join("\n", gamesByAuthor);
-                } else {
-                    response = "Нет пройденных игр этого издателя.";
-                }
-            } else {
-                response = "Введите параметр после /getbyauthor";
-            }
-
+            String authorRequest = "Введите имя автора:";
+            response = authorRequest;
+            awaitingAuthorForGamesByAuthor = true; // Флаг ожидания имени автора для команды /getbyauthor
 
 
         } else if (textMsg.startsWith("/getbyyear")) {
-            if (textMsg.length() > 10) {
-                int year = Integer.parseInt(textMsg.substring(11)); // Получаем год из сообщения
-                ArrayList<String> getGamesByYear = storage.getGamesByYear(year, chatId);
-                if (!getGamesByYear.isEmpty()) {
-                    response = "Игры" + " " + year + " " + "года" + ":\n" + String.join("\n", getGamesByYear);
-                } else {
-                    response = "Нет пройденных игр в этого года.";
-                }
-            } else {
-                response = "Введите параметр после /getbyyear";
-            }
+            String yearRequest = "Введите год (не более 4 цифр):";
+            response = yearRequest;
+            awaitingYearForGamesByYear = true; // Флаг ожидания года для команды /getbyyear
 
 
         } else if (textMsg.startsWith("/getbyrating")) {
@@ -317,23 +419,10 @@ public class MessageHandling implements MessageProcessor {
 
 
         } else if (textMsg.startsWith("/removegame")) {
-            if (textMsg.length() > 11) {
-                String message = textMsg.substring(12);
-                try {
-                    int gameNumber = Integer.parseInt(message);
-                    ArrayList<String> playedGames = storage.getPlayedGames(chatId);
-                    if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
-                        String removedGame = playedGames.remove(gameNumber - 1); // Удаляем книгу и получаем ее данные
-                        // Здесь можно использовать removedGame для получения информации об удаленной книге
-                        storage.updatePlayedGames(chatId, playedGames); // Обновляем список без удаленной игры
-                        response = "Игра " + removedGame + " успешно удалена из списка пройденных!";
-                    } else {
-                        response = "Указанный номер игры не существует.";
-                    }
-                } catch (NumberFormatException e) {
-                    response = "Некорректный формат номера игры";
-                }
-            } else {response = "Чтобы удалить игру введите\n/removegame Номер_в_списке";}
+            String removeRequest = "Введите номер игры, которую нужно удалить:";
+            response = removeRequest;
+            awaitingGameNumberForRemoval = true; // Флаг ожидания года для команды /getbyyear
+
 
         } else if (textMsg.equals("/playpuzzle")) {
             // Вход в режим головоломки
@@ -349,5 +438,3 @@ public class MessageHandling implements MessageProcessor {
 
 
 }
-
-
