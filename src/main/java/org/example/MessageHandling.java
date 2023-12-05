@@ -294,6 +294,7 @@ public class MessageHandling implements MessageProcessor {
     }
 
 
+
     /**
      * Обрабатывает команду изменения года к новой игре.
      *
