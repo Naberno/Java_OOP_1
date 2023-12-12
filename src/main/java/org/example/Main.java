@@ -5,6 +5,9 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+/**
+ * Класс Main для запуска ботов.
+ */
 public class Main {
     /**
      Статическая переменная для логгера, созданного через LogManager.
@@ -24,6 +27,8 @@ public class Main {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(new TelegramBot());
+
+            VkBot.main(args); // вызов main метода VkBot
         } catch (TelegramApiException e) {
             logger.error("Error registering bot", e);
         }

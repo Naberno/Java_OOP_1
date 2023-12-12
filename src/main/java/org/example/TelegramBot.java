@@ -7,7 +7,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +28,7 @@ interface TelegramBotInterface {
      * @return Объект ReplyKeyboardMarkup с настроенной клавиатурой.
      */
     ReplyKeyboardMarkup createKeyboard();
+    ReplyKeyboardMarkup createCancelBoard();
 }
 
 
@@ -83,13 +88,13 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
                 long chatId = message.getChatId();
 
                 // Выводим сообщение пользователя в консоль
-                System.out.println("User Message: " + userMessage);
+                System.out.println("TG User Message: " + userMessage);
 
                 // Получаем текст сообщения пользователя, отправляем в написанный нами обработчик
                 String response = messageHandling.parseMessage(userMessage, chatId);
 
                 // Выводим ответ бота в консоль
-                System.out.println("Bot Response: " + response);
+                System.out.println("TG Bot Response: " + response);
 
                 // Создаем объект класса SendMessage - наш будущий ответ пользователю
                 SendMessage outMess = new SendMessage();
@@ -97,9 +102,13 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
                 outMess.setChatId(String.valueOf(chatId));
                 outMess.setText(response);
                 // Проверяем флаг awaitingRating
-                if (messageHandling.isAwaitingRating()) {
+                if (messageHandling.isAwaitingStart()) {
                     // Если оценка ожидается, вызываем createKeyboard
                     outMess.setReplyMarkup(createKeyboard());
+                }
+                if (messageHandling.isAwaitingCancel()){
+                    // Если цикл с запросом то вызывать клавиатуру
+                    outMess.setReplyMarkup(createCancelBoard());
                 }
                 // Отправка в чат
                 execute(outMess);
@@ -110,25 +119,40 @@ public class TelegramBot extends TelegramLongPollingBot implements TelegramBotIn
     }
 
 
-
     /**
-     * Метод для создания клавиатуры в боте
+     * Метод для создания клавиатуры в главном меню
      */
     public ReplyKeyboardMarkup createKeyboard() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создание ряда клавиш
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("1");
-        row1.add("2");
+        row1.add("Помощь");
+        row1.add("Добавить_игру");
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("3");
-        row2.add("4");
-        row2.add("5");
+        row2.add("Список_игр");
+        row2.add("Загадки");
         keyboard.add(row1);
         keyboard.add(row2);
         // Установка клавиатуры
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;
     }
+
+    /**
+     * Метод для создания клавиатуры отмены в боте
+     */
+    public ReplyKeyboardMarkup createCancelBoard() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        // Создание ряда клавиш
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add("Отменить");
+        keyboard.add(row1);
+        // Установка клавиатуры
+        keyboardMarkup.setKeyboard(keyboard);
+        return keyboardMarkup;
+    }
+
+
 }
