@@ -7,7 +7,6 @@ import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.Message;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
-import com.vk.api.sdk.queries.messages.MessagesSendQuery;
 
 import java.util.List;
 
@@ -16,18 +15,29 @@ import java.util.List;
  */
 public class VkBot {
 
+    private MessageHandling messageHandling;
     private static final long GROUP_ID = 223017873;
     private static final String ACCESS_TOKEN = System.getenv("vkbotToken");
-
     private VkApiClient vk;
     private GroupActor actor;
 
+
+    /**
+     * Конструктор класса VkBot, инициализирующий объекты VkApiClient, GroupActor и MessageHandling.
+     */
     public VkBot() {
         vk = new VkApiClient(new HttpTransportClient());
         actor = new GroupActor((int) GROUP_ID, ACCESS_TOKEN);
         messageHandling = new MessageHandling();
     }
 
+
+    /**
+     * Метод startBot запускает VK бота.
+     * Получает данные для Long Poll сервера, затем в бесконечном цикле получает и обрабатывает сообщения.
+     * Обработанный ответ отправляется обратно в чат.
+     * В случае возникновения исключений, выводит их в консоль.
+     */
     public void startBot() {
         try {
             int ts = vk.messages().getLongPollServer(actor).execute().getTs();
@@ -60,13 +70,22 @@ public class VkBot {
 
                 ts = vk.messages().getLongPollServer(actor).execute().getTs();
 
-                Thread.sleep(500);
+                Thread.sleep(10);
             }
         } catch (ApiException | ClientException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+
+    /**
+     * Метод sendVkMessage отправляет сообщение в VK.
+     * Использует метод messages().send() VK API, указывая получателя, текст сообщения и уникальный random_id.
+     * Обрабатывает возможные исключения и выводит их в консоль.
+     *
+     * @param chatId Идентификатор чата или пользователя в VK.
+     * @param text   Текст сообщения для отправки.
+     */
     private void sendVkMessage(long chatId, String text) {
         try {
             vk.messages().send(actor)
@@ -79,14 +98,13 @@ public class VkBot {
         }
     }
 
-    private MessageHandling messageHandling;
 
-
-    private static Object createKeyboard() {
-        // Ваш код для создания клавиатуры
-        return null;
-    }
-
+    /**
+     * Главный метод main запускает VK бота.
+     * Создает экземпляр VkBot и вызывает его метод startBot().
+     *
+     * @param args Аргументы командной строки (не используются).
+     */
     public static void main(String[] args) {
         VkBot vkBot = new VkBot();
         vkBot.startBot();

@@ -28,39 +28,58 @@ public class MessageHandling implements MessageProcessor {
     private PuzzleGame puzzleGame;
     private boolean puzzleMode;
     private boolean awaitingRating;
-    private String lastAddedGameTitle;
-    private String lastAddedGameAuthor;
-    private int lastAddedGameYear;
-    private long lastAddedGameChatId;
-    private boolean awaitingGameNumberForEdit;
-    private int lastAddedGameNumber;
-    private boolean awaitingEditTitle;
-    private boolean awaitingEditAuthor;
-    private boolean awaitingEditYear;
+    private boolean awaitingAuthor;
     private boolean awaitingAuthorForGamesByAuthor;
     private boolean awaitingYearForGamesByYear;
     private boolean awaitingGameNumberForRemoval;
+    private boolean awaitingGameNumberForEdit;
+    private String lastAddedGameTitle;
+    private String lastAddedGameAuthor;
+    private int lastAddedGameYear;
+    private int lastAddedGameNumber;
+    private long lastAddedGameChatId;
+    private boolean awaitingTitle;
+    private boolean awaitingYear;
+    private boolean awaitingEditYear;
+    private boolean awaitingEditAuthor;
+    private boolean awaitingEditTitle;
+    private boolean awaitngStart;
+    private boolean awaitingcancel;
+
 
     public boolean isAwaitingRating() {
         return awaitingRating;
     }
 
     /**
+     * Для кнопок при старте бота вылезут полезные кнопки
+     * @return флаг true/false
+     */
+    public boolean isAwaitingStart() { return awaitngStart; }
+    public boolean isAwaitingCancel() { return awaitingcancel; }
+
+
+    /**
      * Конструктор класса MessageHandling. Инициализирует объекты Storage и PuzzleGame,
      * а также устанавливает начальное значение режима головоломки как false.
      */
     public MessageHandling() {
-        awaitingGameNumberForRemoval = false;
-        awaitingYearForGamesByYear = false;
-        awaitingAuthorForGamesByAuthor = false;
-        awaitingEditYear = false;
-        awaitingEditAuthor = false;
-        awaitingEditTitle = false;
-        awaitingGameNumberForEdit = false;
         storage = new Storage();
         puzzleGame = new PuzzleGame();
         puzzleMode = false;
         awaitingRating = false;
+        awaitingAuthor = false;
+        awaitingTitle = false;
+        awaitingYear = false;
+        awaitingAuthorForGamesByAuthor = false;
+        awaitingYearForGamesByYear = false;
+        awaitingGameNumberForRemoval = false;
+        awaitingGameNumberForEdit = false;
+        awaitingEditYear  = false;
+        awaitingEditAuthor = false;
+        awaitingEditTitle = false;
+        awaitngStart = false;
+        awaitingcancel = false;
     }
 
 
@@ -74,6 +93,7 @@ public class MessageHandling implements MessageProcessor {
 
     public String parseMessage(String textMsg, long chatId) {
         String response;
+
         if (awaitingEditYear){
             response = handleEditYear(textMsg, chatId);
         }else if (awaitingEditAuthor) {
@@ -82,14 +102,26 @@ public class MessageHandling implements MessageProcessor {
             response = handleEditTitle(textMsg, chatId);
         } else if (awaitingGameNumberForEdit){
             response = handleEditNumber(textMsg, chatId);
-        }else if (awaitingRating) {
+        }else if (awaitingYearForGamesByYear){
+            response = handleYearForGamesByYear(textMsg, chatId);
+        }else if (awaitingAuthorForGamesByAuthor) {
+            response = handleAuthorForGamesByAuthor(textMsg, chatId);
+        }else if (awaitingTitle) {
+            response = handleAddTitle(textMsg, chatId);
+        } else if (awaitingAuthor) {
+            response = handleAddAuthor(textMsg, chatId);
+        } else if (awaitingYear) {
+            response = handleAddYear(textMsg, chatId);
+        } else if (awaitingRating) {
             response = handleRating(textMsg);
-        } else if (textMsg.startsWith("/addgame")) {
-            response = handleAddGame(textMsg, chatId);
+        } else if (awaitingGameNumberForRemoval) {
+            response = handleRemoveGame(textMsg, chatId);
         } else if (puzzleMode) {
             response = handlePuzzleMode(textMsg, chatId);
-        } else{
+        } else {
             response = handleDefaultMode(textMsg, chatId);
+            awaitngStart = true;
+            awaitingcancel = false;
         }
 
         return response;
@@ -97,11 +129,11 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
-     Обрабатывает действия пользователя в режиме головоломки.
-
-     @param textMsg сообщение пользователя
-     @param chatId  идентификатор чата
-     @return ответ бота на действие пользователя
+     * Обработчик сообщений в режиме головоломки.
+     *
+     * @param textMsg Входящий текстовый запрос от пользователя.
+     * @param chatId  Идентификатор чата пользователя.
+     * @return Ответ на запрос пользователя в режиме головоломки.
      */
     private String handlePuzzleMode(String textMsg, long chatId) {
         String response;
@@ -128,47 +160,64 @@ public class MessageHandling implements MessageProcessor {
         return response;
     }
 
+    /**
+     * Позволяет отменить действие с помощью кнопки
+     *
+     * @param textMsg текст сообщения с командой
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return Ответ на отмену действия
+     */
+    private String CancelButton(String textMsg, long chatId){
+        String response = null;
+        awaitingcancel = true;
+        if (textMsg.equals("Отменить")){
+            awaitingRating = false;
+            awaitingAuthor = false;
+            awaitingTitle = false;
+            awaitingYear = false;
+            awaitingAuthorForGamesByAuthor = false;
+            awaitingYearForGamesByYear = false;
+            awaitingGameNumberForRemoval = false;
+            awaitingGameNumberForEdit = false;
+            awaitingEditYear  = false;
+            awaitingEditAuthor = false;
+            awaitingEditTitle = false;
+            awaitngStart = true;
+            response = "Процедура отменена";
+        }
+        return response;
+    }
 
     /**
-        Обрабатывает команду добавления игры в базу данных.
-
-        @param textMsg текстовое сообщение, полученное от пользователя
-        @param chatId идентификатор чата пользователя
-        @return сообщение с ответом, указывающее на успешность или неудачу добавления игры
+     * Обрабатывает команду добавления названия новой игры.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
      */
-    public String handleAddGame(String textMsg, long chatId) {
+    public String handleAddTitle(String textMsg, long chatId) {
         String response;
-
-        if (textMsg.length() > 9) {
-            String[] parts = textMsg.substring(9).split("\n");
-            if (parts.length == 3) {
-                String title = parts[0].trim();
-                String author = parts[1].trim();
-                int year;
-
-                try {
-                    year = Integer.parseInt(parts[2].trim());
-
-                    if (!storage.gameExists(title, author, year, chatId)) {
-                        lastAddedGameTitle = title;
-                        lastAddedGameAuthor = author;
-                        lastAddedGameYear = year;
-                        lastAddedGameChatId = chatId;
-                        awaitingRating = true;
-
-                        response = "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена!\nОцените игру от 1 до 5:";
-                        return response;  // Возвращаем ответ, чтобы прервать дальнейшую обработку в текущем вызове
-                    } else {
-                        response = "Игра с указанным названием, издателем и годом выхода уже существует в базе данных.";
-                    }
-                } catch (NumberFormatException e) {
-                    response = "Некорректный формат года выхода.";
-                }
-            } else {
-                response = "Некорректный формат ввода. Используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";
+        awaitingcancel = true;
+        if (!awaitingTitle) {
+            response = "Введите название игры";
+            awaitingTitle = true;
+        }else if(textMsg.equals("Отменить")){
+            awaitingTitle = false;
+            response = "Отменено";
+            awaitngStart = true;
+            awaitingcancel = false;
+        }
+        else {
+            if (textMsg.contains("\n") || (textMsg.contains("  "))){
+                response = "Неверный формат. Введите название игры";
             }
-        } else {
-            response = "Чтобы добавить игру используйте:\n/addgame Название_игры\nИздатель\nГод_выхода";
+            else {
+                CancelButton(textMsg, chatId);
+                awaitingTitle = false;
+                lastAddedGameTitle = textMsg.trim();
+                response = "Введите издателя игры.";
+                awaitingAuthor = true;
+            }
         }
 
         return response;
@@ -176,10 +225,73 @@ public class MessageHandling implements MessageProcessor {
 
 
     /**
-     Обрабатывает оценку пользователя по текстовому сообщению.
+     * Обрабатывает команду добавления издателя к новой игре.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
+     */
+    public String handleAddAuthor(String textMsg, long chatId) {
+        String response;
+        CancelButton(textMsg, chatId);
+        if (!awaitingAuthor) {
+            response = "Введите издателя игры";
+            awaitingAuthor = true;
+        } else {
+            if (textMsg.contains("\n") || (textMsg.contains("  "))){
+                response = "Неверный формат. Введите издателя игры";
+            }
+            else {
+                awaitingAuthor = false;
+                lastAddedGameAuthor = textMsg.trim();
+                lastAddedGameChatId = chatId;
+                response = "Введите год выхода игры.";
+                awaitingYear = true;
+            }
+        }
 
-     @param textMsg текстовое сообщение с оценкой
-     @return ответный текстовый ответ, казывающее на успешное или неудачное добавление оценки игре
+        return response;
+    }
+
+
+    /**
+     * Обрабатывает команду добавления года к новой игре.
+     *
+     * @param textMsg текст сообщения с командой и данными о новой игре
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
+     */
+    public String handleAddYear(String textMsg, long chatId) {
+        String title = lastAddedGameTitle;
+        String author = lastAddedGameAuthor;
+        CancelButton(textMsg, chatId);
+
+        // Проверка формата
+        if (!textMsg.matches("\\d{4}") || textMsg.matches(".*[a-zA-Z].*")) {
+            return "Некорректный формат года. Пожалуйста, введите четыре цифры без букв.";
+        }
+        int year = Integer.parseInt(textMsg.trim());
+        if (storage.gameExists(title, author, year, chatId)) {
+            awaitingTitle = true;
+            awaitingAuthor = false;
+            awaitingYear = false;
+            awaitingRating = false;
+            return "Игра с таким названием, автором и годом уже существует. Пожалуйста, введите название заново:";
+        } else {
+            lastAddedGameYear = year;
+            lastAddedGameChatId = chatId;
+            awaitingYear = false;
+            awaitingRating = true;
+            return "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена!\nОцените игру от 1 до 5:";
+        }
+    }
+
+
+    /**
+     * Обрабатывает ввод рейтинга для недавно добавленной игры.
+     *
+     * @param textMsg текст сообщения с введённым рейтингом
+     * @return стринговый ответ для пользователя
      */
     public String handleRating(String textMsg) {
         String response;
@@ -204,15 +316,103 @@ public class MessageHandling implements MessageProcessor {
     }
 
 
-    /**
-     Обрабатывает команду изменения номера игры.
+    public String handleAuthorForGamesByAuthor(String textMsg, long chatId) {
+        String response;
+        CancelButton(textMsg, chatId);
 
-     @param textMsg текстовое сообщение с указанным пользователем номером игры
-     @param chatId идентификатор чата с пользователем
-     @return ответное сообщение в виде строки, уведомляющее пользователя о изменения названия игры или неккоректной форме записи запроса
-     */
+        // Проверяем, что ожидается ввод имени автора
+        if (awaitingAuthorForGamesByAuthor) {
+            // Проверяем, что введенное имя автора не содержит цифр, двух пробелов и символа перевода строки
+            if (!textMsg.contains("  ") && !textMsg.contains("\n")) {
+                String author = textMsg.trim();
+                ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
+                if (!gamesByAuthor.isEmpty()) {
+                    response = "Игры издателя '" + author + "':\n" + String.join("\n", gamesByAuthor);
+                } else {
+                    response = "Нет пройденных игр этого издателя.";
+                }
+            } else {
+                response = "Некорректный формат. Пожалуйста, введите корректно издателя игры.";
+            }
+
+            // Сбрасываем флаг ожидания имени автора
+            awaitingAuthorForGamesByAuthor = false;
+        } else {
+            response = "Неверное состояние для ввода издателя.";
+        }
+
+        return response;
+    }
+
+
+    public String handleYearForGamesByYear(String textMsg, long chatId) {
+        String response;
+        CancelButton(textMsg, chatId);
+
+        // Проверяем, что ожидается ввод года
+        if (awaitingYearForGamesByYear) {
+            try {
+                int year = Integer.parseInt(textMsg.trim());
+
+                // Проверяем, что введенный год не содержит букв и не более 4 цифр
+                if (textMsg.matches("\\d{1,4}")) {
+                    ArrayList<String> gamesByYear = storage.getGamesByYear(year, chatId);
+                    awaitingYearForGamesByYear = false;
+                    if (!gamesByYear.isEmpty()) {
+                        response = "Игры " + year + " года:\n" + String.join("\n", gamesByYear);
+                    } else {
+                        response = "Нет пройденных игр в этого года.";
+                    }
+                } else {
+                    response = "Некорректный формат года. Пожалуйста, введите год в виде числа не более 4 цифр.";
+                }
+            } catch (NumberFormatException e) {
+                response = "Некорректный формат года. Пожалуйста, введите год в виде числа не более 4 цифр.";
+            }
+        } else {
+            response = "Неверное состояние для ввода года.";
+        }
+
+        return response;
+    }
+
+
+    // Метод обработки сообщения для удаления игры
+    public String handleRemoveGame(String textMsg, long chatId) {
+        String response;
+        CancelButton(textMsg, chatId);
+
+        if (awaitingGameNumberForRemoval) {
+            try {
+                int gameNumber = Integer.parseInt(textMsg.trim());
+                ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+
+                if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
+                    String removedGame = playedGames.remove(gameNumber - 1);
+                    storage.updatePlayedGames(chatId, playedGames);
+                    awaitingGameNumberForRemoval = false;
+                    response = "Игра '" + removedGame + "' успешно удалена из списка пройденных!";
+                } else {
+                    response = "Указанный номер игры не существует.";
+                }
+            } catch (NumberFormatException e) {
+                response = "Некорректный формат номера игры. Пожалуйста, введите число.";
+            }
+
+        } else {
+            // Запросим номер игры для удаления
+            response = "Введите номер игры, которую вы хотите удалить из списка пройденных:";
+            awaitingGameNumberForRemoval = true;
+        }
+
+        return response;
+    }
+
+
+
     public String handleEditNumber(String textMsg, long chatId) {
         String response;
+        CancelButton(textMsg, chatId);
         int gameNumber = Integer.parseInt(textMsg.trim());
         ArrayList<String> playedGames = storage.getPlayedGames(chatId);
 
@@ -240,11 +440,12 @@ public class MessageHandling implements MessageProcessor {
      * Обрабатывает команду добавления названия новой игры.
      *
      * @param textMsg текст сообщения с командой и данными о новой игре
-     * @param chatId идентификатор чата с пользователем
-     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении названия игры
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
      */
     public String handleEditTitle(String textMsg, long chatId) {
         String response;
+        CancelButton(textMsg, chatId);
 
         if (!awaitingEditTitle) {
             response = "Введите новое название игры";
@@ -269,11 +470,12 @@ public class MessageHandling implements MessageProcessor {
      * Обрабатывает команду добавления издателя к новой игре.
      *
      * @param textMsg текст сообщения с командой и данными о новой игре
-     * @param chatId идентификатор чата с пользователем
-     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении издателя игры
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
      */
     public String handleEditAuthor(String textMsg, long chatId) {
         String response;
+        CancelButton(textMsg, chatId);
         if (!awaitingEditAuthor) {
             response = "Введите нового издателя игры";
             awaitingEditAuthor = true;
@@ -294,16 +496,15 @@ public class MessageHandling implements MessageProcessor {
     }
 
 
-
     /**
      * Обрабатывает команду изменения года к новой игре.
      *
      * @param textMsg текст сообщения с командой и данными о новой игре
-     * @param chatId идентификатор чата с пользователем
-     * @return ответное сообщение в виде строки, уведомляет пользователя о успешной или неудачном добавлении года издания игры,
-     * так же проверяет игру в процессе добавления на уникальность
+     * @param chatId id беседы, в которой пришло сообщение
+     * @return стринговый ответ для пользователя
      */
     public String handleEditYear(String textMsg, long chatId) {
+        CancelButton(textMsg, chatId);
         int gameNumber;
         String newTitle;
         String newAuthor;
@@ -343,13 +544,14 @@ public class MessageHandling implements MessageProcessor {
      * Обработчик сообщений в режиме по умолчанию.
      *
      * @param textMsg Входящий текстовый запрос от пользователя.
-     * @param chatId   идентификатор чата с пользователем
-     * @return ответ на запрос пользователя командами
+     * @param chatId  Идентификатор чата пользователя.
+     * @return Ответ на запрос пользователя в режиме по умолчанию.
      */
     private String handleDefaultMode(String textMsg, long chatId) {
         String response;
+        awaitngStart = true;
         // Сравниваем текст пользователя с командами, на основе этого формируем ответ
-        if (textMsg.equals("/start") || textMsg.equals("Привет")) {
+        if (textMsg.equals("/start") || textMsg.equals("Старт")) {
             response = "Привет, я игровой бот. Жми /help, чтобы узнать что я могу.";
         } else if (textMsg.equals("/help") || textMsg.equals("Помощь")){
             response = """
@@ -371,7 +573,14 @@ public class MessageHandling implements MessageProcessor {
             String numberRequest = "Введите номер из списка:";
             response = numberRequest;
             awaitingGameNumberForEdit = true; // Флаг ожидания имени автора для команды /getbyauthor
+            awaitingcancel = true;
 
+
+        }else if (textMsg.startsWith("/addgame") || textMsg.equals("Добавить_игру")){
+            String titleRequest = "Введите название игры:";
+            response = titleRequest;
+            awaitingTitle = true;
+            awaitingcancel = true;
 
         } else if (textMsg.equals("/clearplayed")) {
             // Очищаем список пройденных игр
@@ -379,7 +588,7 @@ public class MessageHandling implements MessageProcessor {
             response = "Список пройденных игр очищен!";
 
 
-        } else if (textMsg.equals("/getplayed")) {
+        } else if (textMsg.equals("/getplayed") || textMsg.equals("Список_игр")) {
             // Получаем список пройденных игр с уникальными номерами
             ArrayList<String> playedGames = storage.getPlayedGames(chatId);
             if (playedGames.isEmpty()) {
@@ -396,12 +605,14 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.startsWith("/getbyauthor")) {
             String authorRequest = "Введите имя автора:";
             response = authorRequest;
+            awaitingcancel = true;
             awaitingAuthorForGamesByAuthor = true; // Флаг ожидания имени автора для команды /getbyauthor
 
 
         } else if (textMsg.startsWith("/getbyyear")) {
             String yearRequest = "Введите год (не более 4 цифр):";
             response = yearRequest;
+            awaitingcancel = true;
             awaitingYearForGamesByYear = true; // Флаг ожидания года для команды /getbyyear
 
 
@@ -422,12 +633,14 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.startsWith("/removegame")) {
             String removeRequest = "Введите номер игры, которую нужно удалить:";
             response = removeRequest;
+            awaitingcancel = true;
             awaitingGameNumberForRemoval = true; // Флаг ожидания года для команды /getbyyear
 
 
-        } else if (textMsg.equals("/playpuzzle")) {
+        } else if (textMsg.equals("/playpuzzle") || textMsg.equals("Загадки")) {
             // Вход в режим головоломки
             puzzleMode = true;
+            awaitingcancel = true;
             response = puzzleGame.startPuzzle(chatId);
         }
 
@@ -439,3 +652,5 @@ public class MessageHandling implements MessageProcessor {
 
 
 }
+
+
