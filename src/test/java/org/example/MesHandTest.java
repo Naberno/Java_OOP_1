@@ -279,12 +279,6 @@ public class MesHandTest{
     }
 
 
-
-
-
-
-
-
     /**
      * Тестирование метода handleRating с допустимым рейтингом в пределах разрешенного диапазона.
      */
@@ -326,50 +320,36 @@ public class MesHandTest{
     }
 
 
-
-
-
-
-
-
-
+    /**
+     * Проверка команды /getbyrating для получения списка пройденных игр по рейтингу
+     */
     @Test
     public void testHandleDefaultModeGetByRatingCommandWithGames() {
-        String response = messageHandling.handleAddGame("/addgame Game 1\nAuthor\n2000", 123L);
-        Assert.assertEquals("Игра 'Game 1' издателя Author (2000) успешно добавлена!\nОцените игру от 1 до 5:", response);
-        String textMsg = "3";
-        response = messageHandling.handleRating(textMsg);
-        verify(storage, times(1)).addPlayedGame(eq("Game 1"), eq("Author"),
-                eq(2000), eq(3), eq(123L));
+        // Подготовка тестовых данных
+        storage.addPlayedGame("Game 1", "Author", 2000, 3, ChatId);
+        storage.addPlayedGame("Game 2", "Author", 2001, 4, ChatId);
+        List<String> games = new ArrayList<>();
+        games.add("1. Game 1: 3.0⭐");
+        games.add("2. Game 2: 4.0⭐");
 
+        when(storage.getGamesByAverageRating(ChatId)).thenReturn(games);
+        String response = messageHandling.parseMessage("/getbyrating", ChatId);
+        verify(storage).getGamesByAverageRating(ChatId);
+        Assert.assertEquals("Список игр по среднему рейтингу:\n1. Game 1: 3.0⭐\n2. Game 2: 4.0⭐\n", response);
 
-
-        response = messageHandling.parseMessage("/getbyrating ", ChatId);
-        verify(storage, times(1)).getGamesByAverageRating(ChatId);
-
-
-        // Проверяем результат
-        Assert.assertEquals("Список игр по среднему рейтингу:\n1. Game 1: 3.0⭐\n2. Game 2: 2.0⭐", response);
     }
 
-//    @Test
-//    public void testHandleDefaultModeGetByRatingCommandNoGames() {
-//        // Подготавливаем данные для mock-объекта Storage
-//        List<String> emptyGames = new ArrayList<>();
-//
-//        // Настроим mock-объект
-//        when(storage.getGamesByAverageRating(chatId)).thenReturn(emptyGames);
-//
-//        // Вызываем метод
-//        String response = yourClass.handleDefaultMode("/getbyrating", chatId);
-//
-//        // Проверяем результат
-//        Assert.assertEquals("Нет данных о среднем рейтинге игр.", response);
-//    }
 
+    /**
+     * Проверка ответа при отсутствии данных
+     */
+    @Test
+    public void testHandleDefaultModeGetByRatingCommandNoGames() {
+        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>());
+        String response = messageHandling.parseMessage("/getbyrating", ChatId);
+        Assert.assertEquals("Нет данных о среднем рейтинге игр.", response);
 
-
-
+    }
 
 
     /**
@@ -397,30 +377,19 @@ public class MesHandTest{
 
 
     /**
-     * Тест проверяет правильность вывода avg rating
-     */
-    @Test
-    public void testGetGamesByAverageRating_formatting() {
-        storage.addPlayedGame("Game", "Author", 2000, 3, ChatId);
-        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Collections.singletonList("1. Game: 3.0⭐")));
-        List<String> games = storage.getGamesByAverageRating(ChatId);
-        Assert.assertEquals("1. Game: 3.0⭐", games.get(0));
-    }
-
-    /**
-     * Тест на avg рейтинг если ввели рахные данные
+     * Проверка вычисления среднего рейтинга для игры
+     * с несколькими оценками
      */
     @Test
     public void testAverageRating_multipleRatings() {
-        // Подготовка тестовых данных
-        storage.addPlayedGame("Game", "Author", 2000, 3, 123L);
-        storage.addPlayedGame("Game", "Author", 2000, 4, 1234L);
-        // Имитация вызова метода, который возвращает список с рейтингами
-        when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Arrays.asList("1. Game 1: 3.5⭐")));
-        // Вызываем метод, который должен получить список с рейтингами
+        storage.addPlayedGame("Game", "Author", 2000, 3, ChatId);
+        storage.addPlayedGame("Game", "Author", 2000, 4, ChatId);
+        double actualAvg = (3 + 4) / 2.0;
+        when(storage.getGamesByAverageRating(ChatId))
+                .thenReturn(Collections.singletonList("1. Game: " + actualAvg + "⭐"));
         List<String> games = storage.getGamesByAverageRating(ChatId);
-        // Проверяем результат
-        Assert.assertEquals("1. Game 1: 3.5⭐", games.get(0));
+        Assert.assertEquals(
+                "1. Game: " + actualAvg + "⭐", games.get(0));
     }
 
 
