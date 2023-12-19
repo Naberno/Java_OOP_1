@@ -1,6 +1,7 @@
 package org.example;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Интерфейс для работы с книгами.
@@ -13,7 +14,7 @@ interface GameStorage {
      * @param chatId уникальный идентификатор чата пользователя
      * @return список пройденных игр в формате строки
      */
-    ArrayList<String> getPlayedGames(long chatId);
+    List<String> getPlayedGames(long chatId);
 
     /**
      * Добавляет книгу в список пройденных игр.
@@ -39,7 +40,7 @@ interface GameStorage {
      * @param chatId уникальный идентификатор чата пользователя
      * @return список пройденных игр указанного автора в формате строки
      */
-    ArrayList<String> getGamesByAuthor(String author, long chatId);
+    List<String> getGamesByAuthor(String author, long chatId);
 
     /**
      * Получает список пройденных игр за определенный год для указанного чата.
@@ -48,7 +49,7 @@ interface GameStorage {
      * @param chatId уникальный идентификатор чата пользователя
      * @return список пройденных игр за указанный год в формате строки
      */
-    ArrayList<String> getGamesByYear(int year, long chatId);
+    List<String> getGamesByYear(int year, long chatId);
 
     /**
      * Получает пронумерованный список всех игр с средним рейтингом.
@@ -56,7 +57,7 @@ interface GameStorage {
      * @param chatId уникальный идентификатор чата пользователя
      * @return пронумерованный список игр с средним рейтингом
      */
-    ArrayList<String> getGamesByAverageRating(long chatId);
+    List<String> getGamesByAverageRating(long chatId);
 
 
     /**
@@ -100,7 +101,7 @@ interface QuoteStorage {
 
 // Реализация интерфейсов в классе Storage
 class Storage implements GameStorage, QuoteStorage {
-    final private ArrayList<String> quoteList;
+    final private List<String> quoteList;
 
     /**
      * Хранилище для цитат
@@ -127,8 +128,8 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для получения списка пройденных игр
      */
-    public ArrayList<String> getPlayedGames(long chatId) {
-        ArrayList<String> games = new ArrayList<>();
+    public List<String> getPlayedGames(long chatId) {
+        List<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -267,8 +268,8 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для получения игр одного автора из списка пройденных игр
      */
-    public ArrayList<String> getGamesByAuthor(String author, long chatId) {
-        ArrayList<String> games = new ArrayList<>();
+    public List<String> getGamesByAuthor(String author, long chatId) {
+        List<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -303,8 +304,8 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для получения игр по конкретному году из списка пройденных игр
      */
-    public ArrayList<String> getGamesByYear(int year, long chatId) {
-        ArrayList<String> games = new ArrayList<>();
+    public List<String> getGamesByYear(int year, long chatId) {
+        List<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -343,8 +344,8 @@ class Storage implements GameStorage, QuoteStorage {
      * @param chatId id беседы
      * @return список строк со всеми играми, отсортированными по среднему рейтингу
      */
-    public ArrayList<String> getGamesByAverageRating(long chatId) {
-        ArrayList<String> games = new ArrayList<>();
+    public List<String> getGamesByAverageRating(long chatId) {
+        List<String> games = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -427,14 +428,14 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для обновления списка пройденных игр
      */
-    public void updatePlayedGames(long chatId, ArrayList<String> playedGames) {
+    public void updatePlayedGames(long chatId, List<String> playedGames) {
         Connection connection = null;
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
 
             // Получаем текущий список игр из базы данных
-            ArrayList<String> currentGames = getPlayedGames(chatId);
+            List<String> currentGames = getPlayedGames(chatId);
 
             // Удаляем игры, которые были удалены из списка
             for (String game : currentGames) {
@@ -490,9 +491,9 @@ class Storage implements GameStorage, QuoteStorage {
     /**
      * Метод для получения списка пройденных игр в полном формате (название, автор, год)
      */
-    public ArrayList<String> getAllValues(long chatId) {
+    public List<String> getAllValues(long chatId) {
         Connection connection = null;
-        ArrayList<String> allValues = new ArrayList<>();
+        List<String> allValues = new ArrayList<>();
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:completed_games.db");
