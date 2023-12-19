@@ -1,6 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.io.IOException;
 
 /**
@@ -590,7 +591,7 @@ public class MessageHandling implements MessageProcessor {
 
         } else if (textMsg.equals("/getplayed") || textMsg.equals("Список_игр")) {
             // Получаем список пройденных игр с уникальными номерами
-            ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+            List<String> playedGames = storage.getPlayedGames(chatId);
             if (playedGames.isEmpty()) {
                 response = "Список пройденных игр пуст.";
             } else {
@@ -618,7 +619,7 @@ public class MessageHandling implements MessageProcessor {
 
         } else if (textMsg.startsWith("/getbyrating")) {
             // Обработка команды /getbyrating
-            ArrayList<String> gamesByRating = storage.getGamesByAverageRating(chatId);
+            List<String> gamesByRating = storage.getGamesByAverageRating(chatId);
 
             if (!gamesByRating.isEmpty()) {
                 response = "Список игр по среднему рейтингу:\n";
@@ -635,6 +636,7 @@ public class MessageHandling implements MessageProcessor {
             response = removeRequest;
             awaitingcancel = true;
             awaitingGameNumberForRemoval = true; // Флаг ожидания года для команды /getbyyear
+
 
 
         } else if (textMsg.equals("/playpuzzle") || textMsg.equals("Загадки")) {
