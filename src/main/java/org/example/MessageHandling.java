@@ -200,7 +200,7 @@ public class MessageHandling implements MessageProcessor {
         String response;
         awaitingcancel = true;
         if (!awaitingTitle) {
-            response = "Введите название игры";
+            response = "Введите название игры:";
             awaitingTitle = true;
         }else if(textMsg.equals("Отменить")){
             awaitingTitle = false;
@@ -216,7 +216,7 @@ public class MessageHandling implements MessageProcessor {
                 CancelButton(textMsg, chatId);
                 awaitingTitle = false;
                 lastAddedGameTitle = textMsg.trim();
-                response = "Введите издателя игры.";
+                response = "Введите издателя игры:";
                 awaitingAuthor = true;
             }
         }
@@ -246,7 +246,7 @@ public class MessageHandling implements MessageProcessor {
                 awaitingAuthor = false;
                 lastAddedGameAuthor = textMsg.trim();
                 lastAddedGameChatId = chatId;
-                response = "Введите год выхода игры.";
+                response = "Введите год выхода игры:";
                 awaitingYear = true;
             }
         }
@@ -367,7 +367,7 @@ public class MessageHandling implements MessageProcessor {
                     if (!gamesByYear.isEmpty()) {
                         response = "Игры " + year + " года:\n" + String.join("\n", gamesByYear);
                     } else {
-                        response = "Нет пройденных игр в этого года.";
+                        response = "Нет пройденных игр этого года.";
                     }
                 } else {
                     response = "Некорректный формат года. Пожалуйста, введите год в виде числа не более 4 цифр.";
