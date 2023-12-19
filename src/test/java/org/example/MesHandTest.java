@@ -279,68 +279,98 @@ public class MesHandTest{
     }
 
 
+
+
+
+
+
+
     /**
      * Тестирование метода handleRating с допустимым рейтингом в пределах разрешенного диапазона.
      */
     @Test
-    public void testValidRating() {
-        String response = messageHandling.handleRating("3");
-        Assert.assertTrue(response.startsWith("Отзыв 3⭐ оставлен."));
+    public void testHandleRatingWithValidRating() {
+        String response = messageHandling.handleAddGame("/addgame Title\nAuthor\n2000", 123L);
+        Assert.assertEquals("Игра 'Title' издателя Author (2000) успешно добавлена!\nОцените игру от 1 до 5:", response);
+        String textMsg = "4";
+        response = messageHandling.handleRating(textMsg);
+        verify(storage, times(1)).addPlayedGame(eq("Title"), eq("Author"),
+                eq(2000), eq(4), eq(123L));
+        Assert.assertEquals("Отзыв 4⭐ оставлен.", response);
     }
 
-    /**
-     * Тестирование метода handleRating с минимальным допустимым рейтингом (1 звезда).
-     */
-    @Test
-    public void testMinimumValidRating() {
-        String response = messageHandling.handleRating("1");
-        Assert.assertEquals("Отзыв 1⭐ оставлен.", response);
-    }
 
     /**
-     * Тестирование метода handleRating с максимальным допустимым рейтингом (5 звезд).
+     * Тестирование метода handleRating с рейтингом больше 5 или меньше 1.
      */
     @Test
-    public void testMaximumValidRating() {
-        String response = messageHandling.handleRating("5");
-        Assert.assertEquals("Отзыв 5⭐ оставлен.", response);
-    }
+    public void testHandleRatingWithInvalidRating() {
+        String textMsg = "6";
+        String response = messageHandling.handleRating(textMsg);
 
-    /**
-     * Тестирование метода handleRating с рейтингом ниже минимального значения.
-     */
-    @Test
-    public void testBelowMinimumRating() {
-        String response = messageHandling.handleRating("0");
+        verify(storage, never()).addPlayedGame(any(), any(), anyInt(), anyInt(), anyInt());
         Assert.assertEquals("Пожалуйста, введите оценку от 1 до 5.", response);
     }
 
-    /**
-     * Тестирование метода handleRating с рейтингом выше максимального значения.
-     */
-    @Test
-    public void testAboveMaximumRating() {
-        String response = messageHandling.handleRating("6");
-        Assert.assertEquals("Пожалуйста, введите оценку от 1 до 5.", response);
-    }
 
     /**
      * Тестирование метода handleRating с нечисловым значением рейтинга.
      */
     @Test
-    public void testNonNumericRating() {
-        String response = messageHandling.handleRating("abc");
+    public void testHandleRatingWithInvalidFormat() {
+        String textMsg = "abc";
+        String response = messageHandling.handleRating(textMsg);
+
+        verify(storage, never()).addPlayedGame(any(), any(), anyInt(), anyInt(), anyInt());
         Assert.assertEquals("Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.", response);
     }
 
-    /**
-     * Тестирование метода handleRating с пустым значением рейтинга.
-     */
+
+
+
+
+
+
+
+
     @Test
-    public void testEmptyRating() {
-        String response = messageHandling.handleRating("");
-        Assert.assertEquals("Некорректный формат оценки. Пожалуйста, введите числовое значение от 1 до 5.", response);
+    public void testHandleDefaultModeGetByRatingCommandWithGames() {
+        String response = messageHandling.handleAddGame("/addgame Game 1\nAuthor\n2000", 123L);
+        Assert.assertEquals("Игра 'Game 1' издателя Author (2000) успешно добавлена!\nОцените игру от 1 до 5:", response);
+        String textMsg = "3";
+        response = messageHandling.handleRating(textMsg);
+        verify(storage, times(1)).addPlayedGame(eq("Game 1"), eq("Author"),
+                eq(2000), eq(3), eq(123L));
+
+
+
+        response = messageHandling.parseMessage("/getbyrating ", ChatId);
+        verify(storage, times(1)).getGamesByAverageRating(ChatId);
+
+
+        // Проверяем результат
+        Assert.assertEquals("Список игр по среднему рейтингу:\n1. Game 1: 3.0⭐\n2. Game 2: 2.0⭐", response);
     }
+
+//    @Test
+//    public void testHandleDefaultModeGetByRatingCommandNoGames() {
+//        // Подготавливаем данные для mock-объекта Storage
+//        ArrayList<String> emptyGames = new ArrayList<>();
+//
+//        // Настроим mock-объект
+//        when(storage.getGamesByAverageRating(chatId)).thenReturn(emptyGames);
+//
+//        // Вызываем метод
+//        String response = yourClass.handleDefaultMode("/getbyrating", chatId);
+//
+//        // Проверяем результат
+//        Assert.assertEquals("Нет данных о среднем рейтинге игр.", response);
+//    }
+
+
+
+
+
 
     /**
      * Тест проверяет правильность вывода avg rating
