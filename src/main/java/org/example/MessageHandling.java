@@ -264,12 +264,16 @@ public class MessageHandling implements MessageProcessor {
      */
     public String handleAddYear(String textMsg, long chatId) {
         String title = lastAddedGameTitle;
+        String response;
         String author = lastAddedGameAuthor;
         CancelButton(textMsg, chatId);
 
-        // Проверка формата
-        if (!textMsg.matches("\\d{4}") || textMsg.matches(".*[a-zA-Z].*")) {
-            return "Некорректный формат года. Пожалуйста, введите четыре цифры без букв.";
+        if (!awaitingYear) {
+            response = "Введите год выхода игры.";
+            awaitingYear = true;
+            // Проверка формата
+        }else if (!textMsg.matches("\\d{4}") || textMsg.matches(".*[a-zA-Z].*")) {
+            response = "Некорректный формат года. Пожалуйста, введите четыре цифры без букв.";
         }
         int year = Integer.parseInt(textMsg.trim());
         if (storage.gameExists(title, author, year, chatId)) {
@@ -277,14 +281,15 @@ public class MessageHandling implements MessageProcessor {
             awaitingAuthor = false;
             awaitingYear = false;
             awaitingRating = false;
-            return "Игра с таким названием, автором и годом уже существует. Пожалуйста, введите название заново:";
+            response = "Игра с таким названием, автором и годом уже существует. Пожалуйста, введите название заново:";
         } else {
             lastAddedGameYear = year;
             lastAddedGameChatId = chatId;
             awaitingYear = false;
             awaitingRating = true;
-            return "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена!\nОцените игру от 1 до 5:";
+            response = "Игра '" + title + "' издателя " + author + " (" + year + ") успешно добавлена!\nОцените игру от 1 до 5:";
         }
+        return response;
     }
 
 
@@ -326,7 +331,7 @@ public class MessageHandling implements MessageProcessor {
             // Проверяем, что введенное имя автора не содержит цифр, двух пробелов и символа перевода строки
             if (!textMsg.contains("  ") && !textMsg.contains("\n")) {
                 String author = textMsg.trim();
-                ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
+                List<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
                 if (!gamesByAuthor.isEmpty()) {
                     response = "Игры издателя '" + author + "':\n" + String.join("\n", gamesByAuthor);
                 } else {
@@ -357,7 +362,7 @@ public class MessageHandling implements MessageProcessor {
 
                 // Проверяем, что введенный год не содержит букв и не более 4 цифр
                 if (textMsg.matches("\\d{1,4}")) {
-                    ArrayList<String> gamesByYear = storage.getGamesByYear(year, chatId);
+                    List<String> gamesByYear = storage.getGamesByYear(year, chatId);
                     awaitingYearForGamesByYear = false;
                     if (!gamesByYear.isEmpty()) {
                         response = "Игры " + year + " года:\n" + String.join("\n", gamesByYear);
@@ -386,7 +391,7 @@ public class MessageHandling implements MessageProcessor {
         if (awaitingGameNumberForRemoval) {
             try {
                 int gameNumber = Integer.parseInt(textMsg.trim());
-                ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+                List<String> playedGames = storage.getPlayedGames(chatId);
 
                 if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
                     String removedGame = playedGames.remove(gameNumber - 1);
@@ -415,7 +420,7 @@ public class MessageHandling implements MessageProcessor {
         String response;
         CancelButton(textMsg, chatId);
         int gameNumber = Integer.parseInt(textMsg.trim());
-        ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+        List<String> playedGames = storage.getPlayedGames(chatId);
 
         if (!awaitingGameNumberForEdit) {
             response = "Введите номер игры";
@@ -524,7 +529,7 @@ public class MessageHandling implements MessageProcessor {
             return "Игра с таким названием, автором и годом уже существует. Пожалуйста, введите название заново:";
         } else {
             gameNumber = lastAddedGameNumber;
-            ArrayList<String> playedGames = storage.getAllValues(chatId);
+            List<String> playedGames = storage.getAllValues(chatId);
             String[] oldGameParts = playedGames.get(gameNumber - 1).split("\n");
             String oldTitle = oldGameParts[0];
             String oldAuthor = oldGameParts[1];
