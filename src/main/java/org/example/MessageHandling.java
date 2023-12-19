@@ -1,6 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.io.IOException;
 
 /**
@@ -228,7 +229,7 @@ public class MessageHandling implements MessageProcessor {
                         newYear = Integer.parseInt(parts[3].trim());
 
                         // Проверяем существование игры с указанным уникальным номером в списке пройденных игр
-                        ArrayList<String> playedGames = storage.getAllValues(chatId);
+                        List<String> playedGames = storage.getAllValues(chatId);
                         if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
                             // Получаем старые данные игры
                             String[] oldGameParts = playedGames.get(gameNumber - 1).split("\n");
@@ -261,7 +262,7 @@ public class MessageHandling implements MessageProcessor {
 
         } else if (textMsg.equals("/getplayed")) {
             // Получаем список пройденных игр с уникальными номерами
-            ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+            List<String> playedGames = storage.getPlayedGames(chatId);
             if (playedGames.isEmpty()) {
                 response = "Список пройденных игр пуст.";
             } else {
@@ -276,7 +277,7 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.startsWith("/getbyauthor")) {
             if (textMsg.length() > 12) {
                 String author = textMsg.substring(13); // Получаем имя автора из сообщения
-                ArrayList<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
+                List<String> gamesByAuthor = storage.getGamesByAuthor(author, chatId);
                 if (!gamesByAuthor.isEmpty()) {
                     response = "Игры издателя " + author + ":\n" + String.join("\n", gamesByAuthor);
                 } else {
@@ -291,7 +292,7 @@ public class MessageHandling implements MessageProcessor {
         } else if (textMsg.startsWith("/getbyyear")) {
             if (textMsg.length() > 10) {
                 int year = Integer.parseInt(textMsg.substring(11)); // Получаем год из сообщения
-                ArrayList<String> getGamesByYear = storage.getGamesByYear(year, chatId);
+                List<String> getGamesByYear = storage.getGamesByYear(year, chatId);
                 if (!getGamesByYear.isEmpty()) {
                     response = "Игры" + " " + year + " " + "года" + ":\n" + String.join("\n", getGamesByYear);
                 } else {
@@ -304,7 +305,7 @@ public class MessageHandling implements MessageProcessor {
 
         } else if (textMsg.startsWith("/getbyrating")) {
             // Обработка команды /getbyrating
-            ArrayList<String> gamesByRating = storage.getGamesByAverageRating(chatId);
+            List<String> gamesByRating = storage.getGamesByAverageRating(chatId);
 
             if (!gamesByRating.isEmpty()) {
                 response = "Список игр по среднему рейтингу:\n";
@@ -321,7 +322,7 @@ public class MessageHandling implements MessageProcessor {
                 String message = textMsg.substring(12);
                 try {
                     int gameNumber = Integer.parseInt(message);
-                    ArrayList<String> playedGames = storage.getPlayedGames(chatId);
+                    List<String> playedGames = storage.getPlayedGames(chatId);
                     if (gameNumber >= 1 && gameNumber <= playedGames.size()) {
                         String removedGame = playedGames.remove(gameNumber - 1); // Удаляем книгу и получаем ее данные
                         // Здесь можно использовать removedGame для получения информации об удаленной книге

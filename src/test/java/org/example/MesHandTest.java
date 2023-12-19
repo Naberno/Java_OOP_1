@@ -103,7 +103,7 @@ public class MesHandTest{
      */
     @Test
     public void testGetPlayedGamesCommandWithEmptyList() {
-        ArrayList<String> emptyList = new ArrayList<>();
+        List<String> emptyList = new ArrayList<>();
         when(storage.getPlayedGames(ChatId)).thenReturn(emptyList);
         String response = messageHandling.parseMessage("/getplayed", ChatId);
         verify(storage, times(1)).getPlayedGames(ChatId);
@@ -119,7 +119,7 @@ public class MesHandTest{
         // Замените ChatId на фактическое значение, которое вы ожидаете передать
         long chatId = 12345L;
 
-        ArrayList<String> nonEmptyList = new ArrayList<>();
+        List<String> nonEmptyList = new ArrayList<>();
         nonEmptyList.add("Game 1");
         nonEmptyList.add("Game 2");
 
@@ -141,7 +141,7 @@ public class MesHandTest{
     @Test
     public void testGetGamesByAuthorCommandWithExistingGames() {
         String author = "John Doe";
-        ArrayList<String> games = new ArrayList<>();
+        List<String> games = new ArrayList<>();
         games.add("Game 1");
         games.add("Game 2");
         when(storage.getGamesByAuthor(author, ChatId)).thenReturn(games);
@@ -183,7 +183,7 @@ public class MesHandTest{
     @Test
     public void testGetGamesByYearCommandWithExistingGames() {
         int year = 2020;
-        ArrayList<String> games = new ArrayList<>();
+        List<String> games = new ArrayList<>();
         games.add("Game 1");
         games.add("Game 2");
         when(storage.getGamesByYear(year, ChatId)).thenReturn(games);
@@ -199,7 +199,7 @@ public class MesHandTest{
     @Test
     public void testRemoveGameCommandWithValidGameNumber() {
         String message = "1";
-        ArrayList<String> playedGames = new ArrayList<>();
+        List<String> playedGames = new ArrayList<>();
         playedGames.add("Game 1");
         playedGames.add("Game 2");
         when(storage.getPlayedGames(ChatId)).thenReturn(playedGames);
@@ -215,7 +215,7 @@ public class MesHandTest{
     @Test
     public void testRemoveGameCommandWithInvalidGameNumber() {
         String message = "3";
-        ArrayList<String> playedGames = new ArrayList<>();
+        List<String> playedGames = new ArrayList<>();
         playedGames.add("Game 1");
         playedGames.add("Game 2");
         when(storage.getPlayedGames(ChatId)).thenReturn(playedGames);
@@ -243,7 +243,7 @@ public class MesHandTest{
     @Test
     public void testEditGameCommandWithValidData() {
         String message = "1\nNew Game\nNew Author\n2023";
-        ArrayList<String> playedGames = new ArrayList<>();
+        List<String> playedGames = new ArrayList<>();
         playedGames.add("Old Game\nOld Author\n2022");
         when(storage.getAllValues(ChatId)).thenReturn(playedGames);
         String response = messageHandling.parseMessage("/editgame " + message, ChatId);
@@ -258,7 +258,7 @@ public class MesHandTest{
     @Test
     public void testEditGameCommandWithInvalidGameNumber() {
         String message = "3\nNew Game\nNew Author\n2023";
-        ArrayList<String> playedGames = new ArrayList<>();
+        List<String> playedGames = new ArrayList<>();
         playedGames.add("Old Game\nOld Author\n2022");
         when(storage.getAllValues(ChatId)).thenReturn(playedGames);
         String response = messageHandling.parseMessage("/editgame " + message, ChatId);
@@ -355,7 +355,7 @@ public class MesHandTest{
 //    @Test
 //    public void testHandleDefaultModeGetByRatingCommandNoGames() {
 //        // Подготавливаем данные для mock-объекта Storage
-//        ArrayList<String> emptyGames = new ArrayList<>();
+//        List<String> emptyGames = new ArrayList<>();
 //
 //        // Настроим mock-объект
 //        when(storage.getGamesByAverageRating(chatId)).thenReturn(emptyGames);
@@ -380,7 +380,7 @@ public class MesHandTest{
         storage.addPlayedGame("Game 1", "Author", 2000, 3, ChatId);
         storage.addPlayedGame("Game 2", "Author", 2000, 2, ChatId);
         when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Arrays.asList("1. Game 1: 3.0⭐", "2. Game 2: 2.0⭐")));
-        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        List<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals("1. Game 1: 3.0⭐", games.get(0));
         Assert.assertEquals("2. Game 2: 2.0⭐", games.get(1));
     }
@@ -391,7 +391,7 @@ public class MesHandTest{
      */
     @Test
     public void testGetGamesByAverageRating_emptyList() {
-        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        List<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals(0, games.size());
     }
 
@@ -403,7 +403,7 @@ public class MesHandTest{
     public void testGetGamesByAverageRating_formatting() {
         storage.addPlayedGame("Game", "Author", 2000, 3, ChatId);
         when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Collections.singletonList("1. Game: 3.0⭐")));
-        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        List<String> games = storage.getGamesByAverageRating(ChatId);
         Assert.assertEquals("1. Game: 3.0⭐", games.get(0));
     }
 
@@ -418,7 +418,7 @@ public class MesHandTest{
         // Имитация вызова метода, который возвращает список с рейтингами
         when(storage.getGamesByAverageRating(ChatId)).thenReturn(new ArrayList<>(Arrays.asList("1. Game 1: 3.5⭐")));
         // Вызываем метод, который должен получить список с рейтингами
-        ArrayList<String> games = storage.getGamesByAverageRating(ChatId);
+        List<String> games = storage.getGamesByAverageRating(ChatId);
         // Проверяем результат
         Assert.assertEquals("1. Game 1: 3.5⭐", games.get(0));
     }
