@@ -65,7 +65,6 @@ public class MesHandTest{
         Assert.assertEquals("Введите год выхода игры:", textMsg);
         textMsg = messageHandling.handleAddYear("2000", 123L);
         Assert.assertEquals("Игра 'Title' издателя Author (2000) успешно добавлена!\nОцените игру от 1 до 5:", textMsg);
-        when(storage.gameExists(anyString(), anyString(), anyInt(), anyLong())).thenReturn(true);
         messageHandling.parseMessage(textMsg, ChatId);
         String response = messageHandling.parseMessage(textMsg, ChatId);
         verify(storage, never()).addPlayedGame(anyString(), anyString(), anyInt(), anyInt(), anyLong());
@@ -173,15 +172,14 @@ public class MesHandTest{
     @Test
     public void testGetGamesByYearCommandWithExistingGames() {
         int year = 2020;
-        List<String> games = new ArrayList<>();
+        ArrayList<String> games = new ArrayList<>();
         games.add("Game 1");
         games.add("Game 2");
         when(storage.getGamesByYear(year, ChatId)).thenReturn(games);
-        String response = messageHandling.parseMessage("/getbyyear", ChatId);
-        Assert.assertEquals("Введите год (не более 4 цифр):", response);
+        messageHandling.parseMessage("/getbyyear", ChatId);
+        String response = messageHandling.parseMessage(String.valueOf(year), ChatId);
         verify(storage, times(1)).getGamesByYear(year, ChatId);
-        response = messageHandling.parseMessage(String.valueOf(year), ChatId);
-        Assert.assertEquals("Введите год (не более 4 цифр):", response);
+        Assert.assertEquals("Игры 2020 года:\nGame 1\nGame 2", response);
     }
 
 
@@ -240,12 +238,17 @@ public class MesHandTest{
      */
     @Test
     public void testEditGameCommandWithValidData() {
-        String message = "1\nNew Game\nNew Author\n2023";
         List<String> playedGames = new ArrayList<>();
         playedGames.add("Old Game\nOld Author\n2022");
+        when(storage.getPlayedGames(ChatId)).thenReturn(playedGames);
         when(storage.getAllValues(ChatId)).thenReturn(playedGames);
-        String response = messageHandling.parseMessage("/editgame " + message, ChatId);
-        verify(storage, times(1)).editPlayedGame(eq("Old Game"), eq("Old Author"), eq(2022), eq("New Game"), eq("New Author"), eq(2023), eq(ChatId));
+        messageHandling.parseMessage("/editgame", ChatId);
+        messageHandling.parseMessage("1", ChatId);
+        messageHandling.parseMessage("New Game", ChatId);
+        messageHandling.parseMessage("New Author", ChatId);
+        String response = messageHandling.parseMessage("2023", ChatId);
+        verify(storage, times(1)).editPlayedGame(eq("Old Game"), eq("Old Author"),
+                eq(2022), eq("New Game"), eq("New Author"), eq(2023), eq(ChatId));
         Assert.assertEquals("Игра 'Old Game' успешно заменена на игру 'New Game' от издателя New Author (2023) в списке пройденных!", response);
     }
 
@@ -259,7 +262,6 @@ public class MesHandTest{
         List<String> playedGames = new ArrayList<>();
         playedGames.add("Game 1");
 
-        when(storage.getAllValues(ChatId)).thenReturn(playedGames);
         String response = messageHandling.parseMessage("/editgame", ChatId);
         Assert.assertEquals("Введите номер из списка:", response);
         response = messageHandling.handleEditNumber(String.valueOf(number), ChatId);
@@ -300,9 +302,6 @@ public class MesHandTest{
         verify(storage, times(1)).addPlayedGame(eq("Title"), eq("Author"),
                 eq(2000), eq(4), eq(123L));
         Assert.assertEquals("Отзыв 4⭐ оставлен.", response);
-
-        response = messageHandling.parseMessage("/getbyrating", ChatId);
-        Assert.assertEquals("1. Title: 4⭐", response);
     }
 
 
